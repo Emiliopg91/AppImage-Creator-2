@@ -1,7 +1,8 @@
 import * as core from '@actions/core';
+import fs from 'fs';
+import path from 'path';
 import { inspect } from 'util';
 
-import { name, version } from '../package.json';
 import { BinaryAppImageProcessor } from './business/binaries';
 import { ElectronAppImageProcessor } from './business/electron';
 import { GitHubHelper } from './utils/GitHubHelper';
@@ -13,7 +14,10 @@ function getErrorMessage(error: unknown): string {
 
 export async function run(): Promise<void> {
   try {
-    core.info(`${name} version ${version}`);
+    const packageJsonPath = path.join(process.cwd(), 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+    const version = packageJson.version;
+    core.info(`Running action version ${version}`);
     core.startGroup('Environment info');
     core.info(JSON.stringify(process.env, null, 4));
     core.endGroup();
