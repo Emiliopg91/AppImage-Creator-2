@@ -138907,7 +138907,7 @@ async function run() {
         coreExports.info(JSON.stringify(process.env, null, 4));
         coreExports.endGroup();
         await GitHubHelper.initialize();
-        const forElectron = coreExports.getInput('electron') != undefined ? String(coreExports.getInput('electron')) == 'true' : false;
+        const forElectron = process.env.INPUT_ELECTRON != undefined ? process.env.INPUT_ELECTRON == 'true' : false;
         coreExports.info(`Input value for is_electron: ${forElectron}`);
         if (forElectron) {
             coreExports.info('Running action for Electron app');
