@@ -22,6 +22,7 @@ export class InputParameters {
 
   static fromDesktopFile(): InputParameters {
     const desktopFile = InputParameters.findDesktopFile();
+    core.startGroup('Desktop file handling');
 
     core.info('Loading desktop file data');
 
@@ -68,6 +69,8 @@ export class InputParameters {
     } catch (error) {
       console.error('Error while running version command:', error);
       throw new Error(`Command failed: ${error}`);
+    } finally {
+      core.endGroup();
     }
   }
 

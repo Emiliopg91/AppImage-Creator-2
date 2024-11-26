@@ -47,35 +47,40 @@ export class AppImageTool {
     entrypoint: string,
     desktopPath: string
   ): void {
-    const prevCwd = process.cwd();
+    try {
+      core.startGroup('Creating squashfs-root');
 
-    // Cambiar directorio actual
-    process.chdir(this.tmpPath);
+      const prevCwd = process.cwd();
 
-    const srcDir = path.dirname(entrypoint);
-    const usrBin = path.resolve(path.join('.', 'usr', 'bin', name.replace(/\s+/g, '_')));
-    const logoPath = path.resolve(path.join('.', 'logo.png'));
-    const desktopEntry = path.join(this.tmpPath, `${name}.desktop`);
+      process.chdir(this.tmpPath);
 
-    fs.cpSync(srcDir, usrBin, { recursive: true });
+      const srcDir = path.dirname(entrypoint);
+      const usrBin = path.resolve(path.join('.', 'usr', 'bin', name.replace(/\s+/g, '_')));
+      const logoPath = path.resolve(path.join('.', 'logo.png'));
+      const desktopEntry = path.join(this.tmpPath, `${name}.desktop`);
 
-    fs.copyFileSync(icon, logoPath);
+      fs.cpSync(srcDir, usrBin, { recursive: true });
 
-    const desktopContent = fs.readFileSync(desktopPath, 'utf-8');
-    const newContent = desktopContent
-      .replace('{name}', name.replace('-AppImage', ''))
-      .replace('{version}', version)
-      .replace('{entrypoint}', path.basename(entrypoint))
-      .replace('{icon}', 'logo')
-      .replace('{url}', `https://github.com/${GitHubHelper.repository}`);
+      fs.copyFileSync(icon, logoPath);
 
-    fs.writeFileSync(desktopEntry, newContent);
+      const desktopContent = fs.readFileSync(desktopPath, 'utf-8');
+      const newContent = desktopContent
+        .replace('{name}', name.replace('-AppImage', ''))
+        .replace('{version}', version)
+        .replace('{entrypoint}', path.basename(entrypoint))
+        .replace('{icon}', 'logo')
+        .replace('{url}', `https://github.com/${GitHubHelper.repository}`);
 
-    const desktop = new DesktopParser(desktopEntry);
-    desktop.data['Desktop Entry']['X-GitHub-Api'] = GitHubHelper.latestUrl;
-    desktop.persist(desktopEntry);
+      fs.writeFileSync(desktopEntry, newContent);
 
-    process.chdir(prevCwd);
+      const desktop = new DesktopParser(desktopEntry);
+      desktop.data['Desktop Entry']['X-GitHub-Api'] = GitHubHelper.latestUrl;
+      desktop.persist(desktopEntry);
+
+      process.chdir(prevCwd);
+    } finally {
+      core.endGroup();
+    }
   }
 
   async createAppImage(
@@ -83,96 +88,103 @@ export class AppImageTool {
     version: string,
     directory: string = this.tmpPath
   ): Promise<void> {
-    const prevCwd = process.cwd();
+    try {
+      core.startGroup('Creating AppImage');
+      const prevCwd = process.cwd();
 
-    process.chdir(directory);
+      process.chdir(directory);
 
-    const fileName = name.replace(/[^a-zA-Z0-9]/g, '-');
-    const appImagePath = path.join(this.actionDir, `${fileName}.AppImage`);
+      const fileName = name.replace(/[^a-zA-Z0-9]/g, '-');
+      const appImagePath = path.join(this.actionDir, `${fileName}.AppImage`);
 
-    core.info(`Generating AppImage file '${fileName}'`);
+      core.info(`Generating AppImage file '${fileName}'`);
 
-    const command = `ARCH=x86_64 ${
-      this.appimagetoolPath
-    } --comp gzip ${directory} "${appImagePath}" -u "gh-releases-zsync|${GitHubHelper.repository.replace(
-      '/',
-      '|'
-    )}|latest|${fileName}.AppImage.zsync"`;
+      const command = `ARCH=x86_64 ${
+        this.appimagetoolPath
+      } --comp gzip ${directory} "${appImagePath}" -u "gh-releases-zsync|${GitHubHelper.owner}|${GitHubHelper.repository}|latest|${fileName}.AppImage.zsync"`;
 
-    core.info(`Running '${command}'`);
+      core.info(`Running '${command}'`);
 
-    await new Promise<void>((resolve, reject) => {
-      (async (): Promise<void> => {
-        child_process.exec(command, (error, stdout, stderr) => {
-          if (error) {
-            core.info(stderr);
-            core.info('Error running command');
-            reject(error);
-          } else {
-            core.info(stdout);
-            console.info('Command executed succesfully');
-            resolve();
-          }
-        });
-      })();
-    });
+      await new Promise<void>((resolve, reject) => {
+        (async (): Promise<void> => {
+          child_process.exec(command, (error, stdout, stderr) => {
+            if (error) {
+              core.info(stderr);
+              core.info('Error running command');
+              reject(error);
+            } else {
+              core.info(stdout);
+              console.info('Command executed succesfully');
+              resolve();
+            }
+          });
+        })();
+      });
 
-    fs.copyFileSync(
-      path.join(directory, `${path.basename(appImagePath)}.zsync`),
-      `${appImagePath}.zsync`
-    );
+      fs.copyFileSync(
+        path.join(directory, `${path.basename(appImagePath)}.zsync`),
+        `${appImagePath}.zsync`
+      );
 
-    core.info(`Generating MSync file '${appImagePath}.msync'`);
-    MSync.fromBinary(appImagePath).toFile(`${appImagePath}.msync`);
+      core.info(`Generating MSync file '${appImagePath}.msync'`);
+      MSync.fromBinary(appImagePath).toFile(`${appImagePath}.msync`);
 
-    GitHubHelper.setGitHubEnvVariable('APPIMAGE_PATH', appImagePath);
-    GitHubHelper.setGitHubEnvVariable('MSYNC_PATH', `${appImagePath}.msync`);
+      GitHubHelper.setGitHubEnvVariable('APPIMAGE_PATH', appImagePath);
+      GitHubHelper.setGitHubEnvVariable('MSYNC_PATH', `${appImagePath}.msync`);
 
-    const latestLinuxPath = path.join(this.actionDir, 'latest-linux.yml');
-    core.info('Generating latest-linux.yml');
+      const latestLinuxPath = path.join(this.actionDir, 'latest-linux.yml');
+      core.info('Generating latest-linux.yml');
 
-    const sha512 = this.getSha512(appImagePath);
+      const sha512 = this.getSha512(appImagePath);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: any = {
-      version: version,
-      files: {
-        url: `${fileName}.AppImage`,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const data: any = {
+        version: version,
+        files: {
+          url: `${fileName}.AppImage`,
+          sha512: sha512,
+          size: fs.statSync(appImagePath).size,
+          blockMapSize: Math.floor(fs.statSync(appImagePath).size / 1024)
+        },
+        path: `${fileName}.AppImage`,
         sha512: sha512,
-        size: fs.statSync(appImagePath).size,
-        blockMapSize: Math.floor(fs.statSync(appImagePath).size / 1024)
-      },
-      path: `${fileName}.AppImage`,
-      sha512: sha512,
-      releaseDate: this.getReleaseDate(appImagePath)
-    };
+        releaseDate: this.getReleaseDate(appImagePath)
+      };
 
-    fs.writeFileSync(latestLinuxPath, yaml.dump(data, { noRefs: true }));
+      fs.writeFileSync(latestLinuxPath, yaml.dump(data, { noRefs: true }));
 
-    GitHubHelper.setGitHubEnvVariable('LATEST_LINUX_PATH', latestLinuxPath);
+      GitHubHelper.setGitHubEnvVariable('LATEST_LINUX_PATH', latestLinuxPath);
 
-    process.chdir(prevCwd);
+      process.chdir(prevCwd);
+    } finally {
+      core.endGroup();
+    }
   }
 
   async extractAppImage(file: string): Promise<void> {
-    const command = `${file} --appimage-extract`;
-    core.info(`Running '${command}'`);
+    try {
+      core.startGroup('Extracting AppImage');
+      const command = `${file} --appimage-extract`;
+      core.info(`Running '${command}'`);
 
-    await new Promise<void>((resolve, reject) => {
-      (async (): Promise<void> => {
-        child_process.exec(command, (error, stdout, stderr) => {
-          if (error) {
-            core.info(stderr);
-            core.info('Error running command');
-            reject(error);
-          } else {
-            core.info(stdout);
-            console.info('Command executed succesfully');
-            resolve();
-          }
-        });
-      })();
-    });
+      await new Promise<void>((resolve, reject) => {
+        (async (): Promise<void> => {
+          child_process.exec(command, (error, stdout, stderr) => {
+            if (error) {
+              core.info(stderr);
+              core.info('Error running command');
+              reject(error);
+            } else {
+              core.info(stdout);
+              console.info('Command executed succesfully');
+              resolve();
+            }
+          });
+        })();
+      });
+    } finally {
+      core.endGroup();
+    }
   }
 
   getReleaseDate(path: string): string {

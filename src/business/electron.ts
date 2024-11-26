@@ -10,42 +10,50 @@ import { GitHubHelper } from '../utils/GitHubHelper';
 
 export class ElectronAppImageProcessor {
   private static removeUnneededDistEntries(): void {
-    core.info('Removing unneeded entries on dist folder');
-    const files = fs.readdirSync('.');
+    try {
+      core.startGroup('Removing unneeded entries on dist folder');
+      const files = fs.readdirSync('.');
 
-    files.forEach((file) => {
-      if (!file.endsWith('.AppImage')) {
-        const filePath = path.join('.', file);
-        if (fs.statSync(filePath).isFile()) {
-          fs.unlinkSync(filePath);
-        } else {
-          fs.rmdirSync(filePath, { recursive: true });
+      files.forEach((file) => {
+        if (!file.endsWith('.AppImage')) {
+          const filePath = path.join('.', file);
+          if (fs.statSync(filePath).isFile()) {
+            fs.unlinkSync(filePath);
+          } else {
+            fs.rmdirSync(filePath, { recursive: true });
+          }
         }
-      }
-    });
+      });
+    } finally {
+      core.endGroup();
+    }
   }
 
   private static findAppImage(): string | null {
-    core.info('Looking for AppImage file');
-    const files = fs.readdirSync('.');
+    try {
+      core.startGroup('Looking for AppImage file');
+      const files = fs.readdirSync('.');
 
-    for (const file of files) {
-      if (file.endsWith('.bk.AppImage')) {
-        core.info(`Restoring AppImage for tests: ${file}`);
-        fs.renameSync(file, file.replace('.bk.', '.'));
-        break;
+      for (const file of files) {
+        if (file.endsWith('.bk.AppImage')) {
+          core.info(`Restoring AppImage for tests: ${file}`);
+          fs.renameSync(file, file.replace('.bk.', '.'));
+          break;
+        }
       }
-    }
 
-    for (const file of files) {
-      if (file.endsWith('.AppImage')) {
-        const filePath = path.resolve(file);
-        core.info(`Found AppImage: ${filePath}`);
-        return filePath;
+      for (const file of files) {
+        if (file.endsWith('.AppImage')) {
+          const filePath = path.resolve(file);
+          core.info(`Found AppImage: ${filePath}`);
+          return filePath;
+        }
       }
-    }
 
-    return null;
+      return null;
+    } finally {
+      core.endGroup();
+    }
   }
 
   private static modifySquashFSRoot(
@@ -53,44 +61,48 @@ export class ElectronAppImageProcessor {
     appName: string,
     latestUrl: string
   ): void {
-    core.info('Modifying squashfs-root');
-    const pwd = process.cwd();
-    const squashFSRootDir = path.join(pwd, 'squashfs-root');
+    try {
+      core.startGroup('Modifying squashfs-root');
+      const pwd = process.cwd();
+      const squashFSRootDir = path.join(pwd, 'squashfs-root');
 
-    process.chdir(squashFSRootDir);
+      process.chdir(squashFSRootDir);
 
-    fs.rmSync('AppRun', { force: true });
-    fs.rmSync('.DirIcon', { force: true });
+      fs.rmSync('AppRun', { force: true });
+      fs.rmSync('.DirIcon', { force: true });
 
-    const statics = ['usr', `${appName.toLowerCase()}.png`, `${appName.toLowerCase()}.desktop`];
-    fs.mkdirSync(appName);
+      const statics = ['usr', `${appName.toLowerCase()}.png`, `${appName.toLowerCase()}.desktop`];
+      fs.mkdirSync(appName);
 
-    const files = fs.readdirSync('.');
-    files.forEach((file) => {
-      if (!statics.includes(file) && file !== appName) {
-        fs.renameSync(file, path.join(appName, file));
-      }
-    });
+      const files = fs.readdirSync('.');
+      files.forEach((file) => {
+        if (!statics.includes(file) && file !== appName) {
+          fs.renameSync(file, path.join(appName, file));
+        }
+      });
 
-    fs.copyFileSync(appImageTool.apprunFile, path.basename(appImageTool.apprunFile));
-    const autoupdateFolder = path.join(squashFSRootDir, 'usr', 'bin', 'autoupdate');
+      fs.copyFileSync(appImageTool.apprunFile, path.basename(appImageTool.apprunFile));
+      const autoupdateFolder = path.join(squashFSRootDir, 'usr', 'bin', 'autoupdate');
 
-    fs.mkdirSync(autoupdateFolder, { recursive: true });
-    fs.copyFileSync(
-      appImageTool.autoupFile,
-      path.join(autoupdateFolder, path.basename(appImageTool.autoupFile))
-    );
+      fs.mkdirSync(autoupdateFolder, { recursive: true });
+      fs.copyFileSync(
+        appImageTool.autoupFile,
+        path.join(autoupdateFolder, path.basename(appImageTool.autoupFile))
+      );
 
-    fs.renameSync(appName, path.join('usr', 'bin', appName));
+      fs.renameSync(appName, path.join('usr', 'bin', appName));
 
-    core.info('Modifying desktop file');
-    const desktop = new DesktopParser(`${appName.toLowerCase()}.desktop`);
-    desktop.data['Desktop Entry']['Exec'] = `${appName}/${appName.toLowerCase()}`;
-    desktop.data['Desktop Entry']['X-GitHub-Api'] = latestUrl;
-    desktop.persist(`${appName.toLowerCase()}.desktop`);
+      core.info('Modifying desktop file');
+      const desktop = new DesktopParser(`${appName.toLowerCase()}.desktop`);
+      desktop.data['Desktop Entry']['Exec'] = `${appName}/${appName.toLowerCase()}`;
+      desktop.data['Desktop Entry']['X-GitHub-Api'] = latestUrl;
+      desktop.persist(`${appName.toLowerCase()}.desktop`);
 
-    process.chdir(pwd);
-    fs.renameSync('squashfs-root', appName);
+      process.chdir(pwd);
+      fs.renameSync('squashfs-root', appName);
+    } finally {
+      core.endGroup();
+    }
   }
 
   public static async processAppImage(): Promise<void> {
