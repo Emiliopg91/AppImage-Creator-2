@@ -3,7 +3,7 @@ description: 'Action to assist on AppImage creation'
 inputs:
   token:
     description: 'GITHUB_TOKEN or a `repo` scoped Personal Access Token (PAT)'
-  is_electron:
+  electron:
     description: 'Flag to use electron app workflow'
 outputs:
   version:

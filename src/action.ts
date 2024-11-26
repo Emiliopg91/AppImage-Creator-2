@@ -15,9 +15,7 @@ export async function run(): Promise<void> {
     await GitHubHelper.initialize();
 
     const forElectron =
-      core.getInput('is_electron') != undefined
-        ? String(core.getInput('is_electron')) == 'true'
-        : false;
+      core.getInput('electron') != undefined ? String(core.getInput('electron')) == 'true' : false;
     core.info(`Input value for is_electron: ${forElectron}`);
     if (forElectron) {
       core.info('Running action for Electron app');
