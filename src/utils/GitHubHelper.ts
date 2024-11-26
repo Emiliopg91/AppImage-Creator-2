@@ -16,39 +16,44 @@ export class GitHubHelper {
   public static git = simpleGit();
 
   public static async initialize(): Promise<void> {
-    if (process.env.GITHUB_REPOSITORY) {
-      [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
-    } else {
-      throw new Error('Missing GITHUB_REPOSITORY environment variable');
+    try {
+      core.startGroup('GitHubHelper initialization');
+      if (process.env.GITHUB_REPOSITORY) {
+        [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
+      } else {
+        throw new Error('Missing GITHUB_REPOSITORY environment variable');
+      }
+
+      if (process.env.GITHUB_WORKSPACE) {
+        GitHubHelper.workspacePath = process.env.GITHUB_WORKSPACE;
+      } else {
+        throw new Error('Missing GITHUB_WORKSPACE environment variable');
+      }
+
+      if (core.getInput('token') || process.env.GITHUB_TOKEN) {
+        const token = core.getInput('token') || process.env.GITHUB_TOKEN!;
+        GitHubHelper.octokit = github.getOctokit(token);
+        await GitHubHelper.git.remote([
+          'set-url',
+          'origin',
+          `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
+        ]);
+      } else {
+        throw new Error('Missing token action input');
+      }
+
+      GitHubHelper.baseParams = {
+        owner: GitHubHelper.owner,
+        repo: GitHubHelper.repository
+      };
+      core.info(
+        'Using base parameters for octokit: \n' + JSON.stringify(GitHubHelper.baseParams, null, 4)
+      );
+
+      GitHubHelper.latestUrl = `https://api.github.com/repos/${GitHubHelper.owner}/${GitHubHelper.repository}/releases/latest`;
+    } finally {
+      core.endGroup();
     }
-
-    if (process.env.GITHUB_WORKSPACE) {
-      GitHubHelper.workspacePath = process.env.GITHUB_WORKSPACE;
-    } else {
-      throw new Error('Missing GITHUB_WORKSPACE environment variable');
-    }
-
-    if (core.getInput('token') || process.env.GITHUB_TOKEN) {
-      const token = core.getInput('token') || process.env.GITHUB_TOKEN!;
-      GitHubHelper.octokit = github.getOctokit(token);
-      await GitHubHelper.git.remote([
-        'set-url',
-        'origin',
-        `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
-      ]);
-    } else {
-      throw new Error('Missing token action input');
-    }
-
-    GitHubHelper.baseParams = {
-      owner: GitHubHelper.owner,
-      repo: GitHubHelper.repository
-    };
-    core.info(
-      'Using base parameters for octokit: \n' + JSON.stringify(GitHubHelper.baseParams, null, 4)
-    );
-
-    GitHubHelper.latestUrl = `https://api.github.com/repos/${GitHubHelper.owner}/${GitHubHelper.repository}/releases/latest`;
   }
 
   public static setGitHubEnvVariable(variableName: string, value: string): void {

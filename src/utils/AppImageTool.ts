@@ -21,23 +21,28 @@ export class AppImageTool {
   public autoupFile: string;
 
   constructor() {
-    this.actionDir = process.env.GITHUB_ACTION_PATH!;
-    this.appimagetoolPath = path.join(this.actionDir, 'resources', 'appimagetool');
-    this.apprunLocalFile = path.join(this.actionDir, 'resources', 'AppRun');
-    this.autoupLocalFile = path.join(this.actionDir, 'dist', 'autoupdate.cjs.js');
-    this.tmpPath = fs.mkdtempSync(path.join(os.tmpdir(), 'create-appimage-'));
-    this.apprunFile = path.join(this.tmpPath, 'AppRun');
-    this.autoupFolder = path.join(this.tmpPath, 'usr', 'bin', 'autoupdate');
-    this.autoupFile = path.join(this.autoupFolder, 'autoupdate.cjs.js');
+    try {
+      core.startGroup('AppImageTool initialization');
+      this.actionDir = process.env.GITHUB_ACTION_PATH!;
+      this.appimagetoolPath = path.join(this.actionDir, 'resources', 'appimagetool');
+      this.apprunLocalFile = path.join(this.actionDir, 'resources', 'AppRun');
+      this.autoupLocalFile = path.join(this.actionDir, 'dist', 'autoupdate.cjs.js');
+      this.tmpPath = fs.mkdtempSync(path.join(os.tmpdir(), 'create-appimage-'));
+      this.apprunFile = path.join(this.tmpPath, 'AppRun');
+      this.autoupFolder = path.join(this.tmpPath, 'usr', 'bin', 'autoupdate');
+      this.autoupFile = path.join(this.autoupFolder, 'autoupdate.cjs.js');
 
-    core.info(`Using tmp file '${this.tmpPath}'`);
-    core.info(path.resolve(this.apprunLocalFile));
+      core.info(`Using tmp file '${this.tmpPath}'`);
+      core.info(path.resolve(this.apprunLocalFile));
 
-    fs.copyFileSync(this.apprunLocalFile, this.apprunFile);
+      fs.copyFileSync(this.apprunLocalFile, this.apprunFile);
 
-    fs.mkdirSync(this.autoupFolder, { recursive: true });
-    fs.copyFileSync(this.autoupLocalFile, this.autoupFile);
-    fs.chmodSync(this.apprunFile, 0o777);
+      fs.mkdirSync(this.autoupFolder, { recursive: true });
+      fs.copyFileSync(this.autoupLocalFile, this.autoupFile);
+      fs.chmodSync(this.apprunFile, 0o777);
+    } finally {
+      core.endGroup();
+    }
   }
 
   createResources(
