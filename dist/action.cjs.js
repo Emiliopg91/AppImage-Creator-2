@@ -138899,13 +138899,6 @@ function getErrorMessage(error) {
 }
 async function run() {
     try {
-        const packageJsonPath = path.join(process.cwd(), 'package.json');
-        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-        const version = packageJson.version;
-        coreExports.info(`Running action version ${version}`);
-        coreExports.startGroup('Environment info');
-        coreExports.info(JSON.stringify(process.env, null, 4));
-        coreExports.endGroup();
         await GitHubHelper.initialize();
         const forElectron = process.env.INPUT_ELECTRON != undefined ? process.env.INPUT_ELECTRON == 'true' : false;
         coreExports.info(`Input value for is_electron: ${forElectron}`);
