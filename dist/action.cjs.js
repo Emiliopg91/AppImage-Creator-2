@@ -138892,10 +138892,13 @@ function getErrorMessage(error) {
 async function run() {
     try {
         await GitHubHelper.initialize();
+        coreExports.info(`Input value for is_electron: ${String(coreExports.getInput('is_electron'))}`);
         if (String(coreExports.getInput('is_electron')) == 'true') {
+            coreExports.info('Running action for Electron app');
             await ElectronAppImageProcessor.processAppImage();
         }
         else {
+            coreExports.info('Running action for app from binaries');
             await BinaryAppImageProcessor.processAppImage();
         }
     }
