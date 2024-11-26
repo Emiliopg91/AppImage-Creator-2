@@ -1,5 +1,4 @@
 import { execSync } from 'child_process';
-import fs from 'fs';
 import path from 'path';
 
 import { GitHubHelper } from './utils/GitHubHelper';
@@ -11,10 +10,14 @@ async function main(): Promise<void> {
     await GitHubHelper.deleteRelease('latest');
     await GitHubHelper.deleteTag('latest');
 
-    const versionFilePath = path.resolve(process.cwd(), 'version.txt');
-    const latestVersion = fs.readFileSync(versionFilePath, 'utf-8').trim();
+    const latestVersion = execSync(
+      `cat ${path.join(process.cwd(), 'package.json')} | jq -r .version`,
+      { encoding: 'utf-8' }
+    ).trim();
     const newVersion = GitHubHelper.incrementVersion(latestVersion!);
-    fs.writeFileSync(versionFilePath, newVersion, 'utf-8');
+    execSync(
+      `jq '.version = "${latestVersion}"' package.json > tmp.json && mv tmp.json package.json`
+    );
 
     execSync('git config --global user.email "actions@github.com"');
     execSync('git config --global user.name "github-actions"');

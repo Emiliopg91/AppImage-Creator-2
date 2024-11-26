@@ -1,32 +1,14 @@
 {
-  "name": "repository-dispatch",
-  "version": "3.0.0",
-  "private": true,
-  "description": "Create a repository dispatch event",
-  "main": "lib/main.js",
+  "name": "appimage-creator-action",
+  "version": "1.0.0",
+  "description": "",
   "scripts": {
     "build": "rollup -c",
     "format": "prettier --write ./src",
-    "format-check": "prettier --check **/*.ts",
     "lint": "eslint ./src --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",
     "test": "jest --passWithNoTests",
     "all": "npm run format && npm run lint && npm run build && npm run test"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/peter-evans/repository-dispatch.git"
-  },
-  "keywords": [
-    "actions",
-    "repository",
-    "dispatch"
-  ],
-  "author": "Peter Evans",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/peter-evans/repository-dispatch/issues"
-  },
-  "homepage": "https://github.com/peter-evans/repository-dispatch#readme",
   "dependencies": {
     "@actions/core": "^1.11.1",
     "@actions/github": "^5.1.1",
