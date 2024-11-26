@@ -1,10 +1,10 @@
 'use strict';
 
 var require$$2$3 = require('child_process');
-var require$$0$2 = require('fs');
 var require$$1$4 = require('path');
 var require$$0 = require('os');
 var require$$0$1 = require('crypto');
+var require$$0$2 = require('fs');
 var require$$2$1 = require('http');
 var require$$3$1 = require('https');
 var require$$0$5 = require('net');
@@ -118485,10 +118485,9 @@ async function main() {
         console.log('ENTORNO:');
         await GitHubHelper.deleteRelease('latest');
         await GitHubHelper.deleteTag('latest');
-        const versionFilePath = require$$1$4.resolve(process.cwd(), 'version.txt');
-        const latestVersion = require$$0$2.readFileSync(versionFilePath, 'utf-8').trim();
+        const latestVersion = require$$2$3.execSync(`cat ${require$$1$4.join(process.cwd(), 'package.json')} | jq -r .version`, { encoding: 'utf-8' }).trim();
         const newVersion = GitHubHelper.incrementVersion(latestVersion);
-        require$$0$2.writeFileSync(versionFilePath, newVersion, 'utf-8');
+        require$$2$3.execSync(`jq '.version = "${latestVersion}"' package.json > tmp.json && mv tmp.json package.json`);
         require$$2$3.execSync('git config --global user.email "actions@github.com"');
         require$$2$3.execSync('git config --global user.name "github-actions"');
         await GitHubHelper.stashPath(require$$1$4.resolve(process.cwd()));
