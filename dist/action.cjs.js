@@ -120443,11 +120443,17 @@ class GitHubHelper {
         coreExports.setOutput(variableName, value);
     }
     static async getLatestVersion() {
-        var _a;
-        const response = await GitHubHelper.octokit.rest.repos.getLatestRelease(Object.assign({}, GitHubHelper.baseParams));
-        if ((_a = response.data) === null || _a === void 0 ? void 0 : _a.tag_name)
+        try {
+            const response = await GitHubHelper.octokit.rest.repos.getLatestRelease(Object.assign({}, GitHubHelper.baseParams));
             return response.data.tag_name;
-        return undefined;
+        }
+        catch (err) {
+            if (err.status && err.status == 404) {
+                coreExports.warning('No previous version published');
+                return undefined;
+            }
+            throw err;
+        }
     }
     static async checkUpdateRequired(newVersion) {
         let update = false;
