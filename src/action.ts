@@ -12,7 +12,7 @@ function getErrorMessage(error: unknown): string {
 
 export async function run(): Promise<void> {
   try {
-    GitHubHelper.initialize();
+    await GitHubHelper.initialize();
 
     if (String(core.getInput('is_electron')) == 'true') {
       await ElectronAppImageProcessor.processAppImage();

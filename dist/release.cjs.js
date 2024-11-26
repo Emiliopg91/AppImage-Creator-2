@@ -118493,10 +118493,10 @@ async function main() {
         require$$2$3.execSync('git config --global user.email "actions@github.com"');
         require$$2$3.execSync('git config --global user.name "github-actions"');
         await GitHubHelper.stashPath(require$$1$4.resolve(process.cwd()));
-        await GitHubHelper.commit(`[ci skip] Release for version ${newVersion}`);
+        await GitHubHelper.commit(`[ci skip] Release for version ${latestVersion}`);
         await GitHubHelper.push();
-        await GitHubHelper.createTag(newVersion);
-        await GitHubHelper.createRelease(newVersion);
+        await GitHubHelper.createTag(latestVersion);
+        await GitHubHelper.createRelease(latestVersion);
         await GitHubHelper.createTag('latest');
         await GitHubHelper.createRelease('latest');
     }
