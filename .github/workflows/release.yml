@@ -1,0 +1,46 @@
+name: Auto Release Patch
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install project
+        run: pnpm i
+
+      - name: Clear dist folder
+        run: |
+          rm -R dist
+
+      - name: Build bundles
+        run: |
+          pnpm all
+
+      - name: Testing
+        run: |
+          pnpm test
+
+      - name: Perform release
+        run: |
+          node dist/release.cjs.ts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

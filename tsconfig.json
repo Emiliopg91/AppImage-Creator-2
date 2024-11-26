@@ -1,16 +1,18 @@
 {
   "compilerOptions": {
-    "target": "es6",
-    "module": "commonjs",
-    "lib": [
-      "es6"
-    ],
-    "outDir": "./lib",
-    "rootDir": "./src",
-    "declaration": true,
-    "strict": true,
-    "noImplicitAny": false,
-    "esModuleInterop": true
+    "target": "ES2017", // Compatibilidad de salida
+    "module": "ESNext", // Necesario para Rollup
+    "moduleResolution": "Node",
+    "declaration": true, // Generar archivos .d.ts
+    "outDir": "./dist",
+    "esModuleInterop": true,
+    "strict": true
   },
-  "exclude": ["__test__", "lib", "node_modules"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

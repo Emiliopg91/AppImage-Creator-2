@@ -1,0 +1,25 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Visual Studio Code
+X-AppImage-Version={version}
+Comment=Code Editing. Redefined.
+Exec={entrypoint} --unity-launch %F
+Icon={icon}
+Categories=TextEditor;Development;IDE;
+StartupWMClass=Code
+StartupNotify=true
+Keywords=vscode;Visual Studio Code;Code;
+MimeType=text/plain;inode/directory;application/x-code-workspace;
+Actions=new-empty-window;
+
+[Desktop Action new-empty-window]
+Name=New Empty Window
+Exec={entrypoint} --new-window %F
+Icon={icon}
+
+[AppImage Creator]
+Entrypoint=./VSCode-linux-x64/code
+Icon=./VSCode-linux-x64/resources/app/resources/linux/code.png
+Version-Cmd=cat ./VSCode-linux-x64/resources/app/package.json | jq -r .version
+Binaries-Url=https://code.visualstudio.com/sha/download?build=stable&os=linux-x64

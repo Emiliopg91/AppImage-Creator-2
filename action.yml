@@ -4,18 +4,17 @@ inputs:
   token:
     description: 'GITHUB_TOKEN or a `repo` scoped Personal Access Token (PAT)'
     default: ${{ github.token }}
-  repository:
-    description: 'The full name of the repository to send the dispatch.'
-    default: ${{ github.repository }}
-  event-type:
-    description: 'A custom webhook event name.'
-    required: true
-  client-payload:
-    description: 'JSON payload with extra information about the webhook event that your action or worklow may use.'
-    default: '{}'
+  is_electron:
+    description: 'Flag to use electron app workflow'
+    default: 'false'
+outputs:
+  version:
+    description: 'Application version'
+  is_update:
+    description: 'If version differs from latest release version'
 runs:
   using: 'node20'
-  main: 'dist/index.js'
+  main: 'dist/action.cjs.js'
 branding:
   icon: 'target'
   color: 'gray-dark'
