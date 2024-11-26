@@ -120434,7 +120434,7 @@ class GitHubHelper {
             repo: GitHubHelper.repository
         };
         coreExports.info('Using base parameters for octokit: \n' + JSON.stringify(GitHubHelper.baseParams, null, 4));
-        GitHubHelper.latestUrl = `https://api.github.com/repos/${GitHubHelper.repository}/${GitHubHelper.owner}/releases/latest`;
+        GitHubHelper.latestUrl = `https://api.github.com/repos/${GitHubHelper.owner}/${GitHubHelper.repository}/releases/latest`;
     }
     static setGitHubEnvVariable(variableName, value) {
         coreExports.exportVariable(variableName, value);
