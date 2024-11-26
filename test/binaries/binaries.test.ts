@@ -73,7 +73,7 @@ describe('Main action body', () => {
       switch (name) {
         case 'token':
           return '<github_secret_token>';
-        case 'is_electron':
+        case 'electron':
           return 'false';
       }
       console.error(`Input value not mocked for '${name}'`);
