@@ -14,9 +14,12 @@ export async function run(): Promise<void> {
   try {
     await GitHubHelper.initialize();
 
+    core.info(`Input value for is_electron: ${String(core.getInput('is_electron'))}`);
     if (String(core.getInput('is_electron')) == 'true') {
+      core.info('Running action for Electron app');
       await ElectronAppImageProcessor.processAppImage();
     } else {
+      core.info('Running action for app from binaries');
       await BinaryAppImageProcessor.processAppImage();
     }
   } catch (error) {
