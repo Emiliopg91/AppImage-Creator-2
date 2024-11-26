@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
+import { simpleGit } from 'simple-git';
 
 export class GitHubHelper {
   public static repository = '';
@@ -12,6 +13,7 @@ export class GitHubHelper {
     repo: ''
   };
   public static latestUrl = '';
+  public static git = simpleGit();
 
   public static initialize(): void {
     if (process.env.GITHUB_REPOSITORY) {
@@ -27,7 +29,8 @@ export class GitHubHelper {
     }
 
     if (core.getInput('token') || process.env.GITHUB_TOKEN) {
-      GitHubHelper.octokit = github.getOctokit(core.getInput('token') || process.env.GITHUB_TOKEN!);
+      const token = core.getInput('token') || process.env.GITHUB_TOKEN!;
+      GitHubHelper.octokit = github.getOctokit(token);
     } else {
       throw new Error('Missing token action input');
     }
@@ -94,6 +97,18 @@ export class GitHubHelper {
         throw err;
       }
     }
+  }
+
+  static async stashPath(path: string): Promise<void> {
+    await GitHubHelper.git.add(path);
+  }
+
+  static async commit(message: string): Promise<void> {
+    await GitHubHelper.git.commit(message);
+  }
+
+  static async push(): Promise<void> {
+    await GitHubHelper.git.push('origin', 'main');
   }
 
   static async deleteTag(tag: string): Promise<void> {

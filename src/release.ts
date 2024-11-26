@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import path from 'path';
 
 import { GitHubHelper } from './utils/GitHubHelper';
 
@@ -12,8 +13,7 @@ async function main(): Promise<void> {
     const latestVersion = await GitHubHelper.getLatestVersion();
     const newVersion = GitHubHelper.incrementVersion(latestVersion!);
 
-    execSync('git config --global user.email "actions@github.com"');
-    execSync('git config --global user.name "github-actions"');
+    GitHubHelper.stashPath(path.resolve(process.cwd(), 'dist'));
     execSync('git add .');
     execSync(`git commit -m "Release for version ${newVersion}"`);
     execSync('git push');

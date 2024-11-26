@@ -9,12 +9,16 @@ export declare class GitHubHelper {
         owner: string;
     };
     static latestUrl: string;
+    static git: import("simple-git").SimpleGit;
     static initialize(): void;
     static setGitHubEnvVariable(variableName: string, value: string): void;
     static setGitHubOutVariable(variableName: string, value: string): void;
     static getLatestVersion(): Promise<string | undefined>;
     static checkUpdateRequired(newVersion: string): Promise<boolean>;
     static deleteRelease(tag: string): Promise<void>;
+    static stashPath(path: string): Promise<void>;
+    static commit(message: string): Promise<void>;
+    static push(): Promise<void>;
     static deleteTag(tag: string): Promise<void>;
     static createTag(tag: string): Promise<void>;
     static getDefaultBranchSha(): Promise<string>;
