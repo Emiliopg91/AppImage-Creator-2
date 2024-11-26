@@ -118487,10 +118487,11 @@ async function main() {
         await GitHubHelper.deleteTag('latest');
         const latestVersion = await GitHubHelper.getLatestVersion();
         const newVersion = GitHubHelper.incrementVersion(latestVersion);
-        GitHubHelper.stashPath(require$$1$4.resolve(process.cwd(), 'dist'));
-        require$$2$3.execSync('git add .');
-        require$$2$3.execSync(`git commit -m "Release for version ${newVersion}"`);
-        require$$2$3.execSync('git push');
+        require$$2$3.execSync('git config --global user.email "actions@github.com"');
+        require$$2$3.execSync('git config --global user.name "github-actions"');
+        await GitHubHelper.stashPath(require$$1$4.resolve(process.cwd(), 'dist'));
+        await GitHubHelper.commit(`[ci skip] Release for version ${newVersion}`);
+        await GitHubHelper.push();
         await GitHubHelper.createTag(newVersion);
         await GitHubHelper.createRelease(newVersion);
         await GitHubHelper.createTag('latest');
