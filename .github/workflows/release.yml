@@ -27,9 +27,11 @@ jobs:
       - name: Install project
         run: pnpm i
 
-      - name: Clear dist folder
+      - name: Clear dist folder if exists
         run: |
-          rm -R dist
+          if [ -d "dist" ]; then
+            rm -R dist
+          fi
 
       - name: Build bundles
         run: |
