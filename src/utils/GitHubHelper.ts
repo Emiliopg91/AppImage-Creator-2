@@ -31,8 +31,8 @@ export class GitHubHelper {
       throw new Error('Missing GITHUB_WORKSPACE environment variable');
     }
 
-    if (core.getInput('token')) {
-      GitHubHelper.octokit = github.getOctokit(core.getInput('token'));
+    if (core.getInput('token') || process.env.GITHUB_TOKEN) {
+      GitHubHelper.octokit = github.getOctokit(core.getInput('token') || process.env.GITHUB_TOKEN!);
     } else {
       throw new Error('Missing token action input');
     }

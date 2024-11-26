@@ -13,8 +13,19 @@ outputs:
   is_update:
     description: 'If version differs from latest release version'
 runs:
-  using: 'node20'
-  main: 'dist/action.cjs.js'
+  using: 'composite'
+  steps:
+    - run: sudo apt-get update
+      shell: bash
+    - run: sudo apt-get install -y jq libfuse2 zsync
+      shell: bash
+    - run: chmod +x $GITHUB_ACTION_PATH/resources/appimagetool
+      shell: bash
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    - run: node dist/action.cjs.js
+      shell: bash
 branding:
   icon: 'target'
   color: 'gray-dark'

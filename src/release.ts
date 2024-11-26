@@ -4,6 +4,7 @@ import { GitHubHelper } from './utils/GitHubHelper';
 
 async function main(): Promise<void> {
   try {
+    GitHubHelper.initialize();
     await GitHubHelper.deleteRelease('latest');
     await GitHubHelper.deleteTag('latest');
 
