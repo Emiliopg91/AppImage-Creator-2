@@ -1,6 +1,7 @@
 import * as core from '@actions/core';
 import { inspect } from 'util';
 
+import { name, version } from '../package.json';
 import { BinaryAppImageProcessor } from './business/binaries';
 import { ElectronAppImageProcessor } from './business/electron';
 import { GitHubHelper } from './utils/GitHubHelper';
@@ -12,6 +13,7 @@ function getErrorMessage(error: unknown): string {
 
 export async function run(): Promise<void> {
   try {
+    core.info(`${name} version ${version}`);
     core.startGroup('Environment info');
     core.info(JSON.stringify(process.env, null, 4));
     core.endGroup();

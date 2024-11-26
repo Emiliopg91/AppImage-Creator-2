@@ -27294,6 +27294,9 @@ function requireCore () {
 
 var coreExports = requireCore();
 
+var name = "appimage-creator-action";
+var version = "1.0.10";
+
 /*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
 function isNothing(subject) {
   return (typeof subject === 'undefined') || (subject === null);
@@ -29292,21 +29295,17 @@ class DesktopParser {
         this.data = {};
         const fileContent = fs__namespace.readFileSync(filePath, 'utf-8');
         let currentSection = null;
-        // Dividir el archivo en líneas y procesar cada una
         const lines = fileContent.split('\n');
         lines.forEach((line) => {
             line = line.trim();
-            // Ignorar comentarios y líneas vacías
             if (!line || line.startsWith('#')) {
                 return;
             }
-            // Detectar nueva sección
             if (line.startsWith('[') && line.endsWith(']')) {
                 currentSection = line.substring(1, line.length - 1);
                 this.data[currentSection] = {};
             }
             else if (line.includes('=') && currentSection) {
-                // Dividir clave y valor
                 const [key, value] = line.split('=', 2).map((str) => str.trim());
                 if (currentSection) {
                     this.data[currentSection][key] = value;
@@ -120405,36 +120404,42 @@ var simpleGit = gitInstanceFactory;
 
 class GitHubHelper {
     static async initialize() {
-        if (process.env.GITHUB_REPOSITORY) {
-            [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
+        try {
+            coreExports.startGroup('GitHubHelper initialization');
+            if (process.env.GITHUB_REPOSITORY) {
+                [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
+            }
+            else {
+                throw new Error('Missing GITHUB_REPOSITORY environment variable');
+            }
+            if (process.env.GITHUB_WORKSPACE) {
+                GitHubHelper.workspacePath = process.env.GITHUB_WORKSPACE;
+            }
+            else {
+                throw new Error('Missing GITHUB_WORKSPACE environment variable');
+            }
+            if (coreExports.getInput('token') || process.env.GITHUB_TOKEN) {
+                const token = coreExports.getInput('token') || process.env.GITHUB_TOKEN;
+                GitHubHelper.octokit = githubExports.getOctokit(token);
+                await GitHubHelper.git.remote([
+                    'set-url',
+                    'origin',
+                    `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
+                ]);
+            }
+            else {
+                throw new Error('Missing token action input');
+            }
+            GitHubHelper.baseParams = {
+                owner: GitHubHelper.owner,
+                repo: GitHubHelper.repository
+            };
+            coreExports.info('Using base parameters for octokit: \n' + JSON.stringify(GitHubHelper.baseParams, null, 4));
+            GitHubHelper.latestUrl = `https://api.github.com/repos/${GitHubHelper.owner}/${GitHubHelper.repository}/releases/latest`;
         }
-        else {
-            throw new Error('Missing GITHUB_REPOSITORY environment variable');
+        finally {
+            coreExports.endGroup();
         }
-        if (process.env.GITHUB_WORKSPACE) {
-            GitHubHelper.workspacePath = process.env.GITHUB_WORKSPACE;
-        }
-        else {
-            throw new Error('Missing GITHUB_WORKSPACE environment variable');
-        }
-        if (coreExports.getInput('token') || process.env.GITHUB_TOKEN) {
-            const token = coreExports.getInput('token') || process.env.GITHUB_TOKEN;
-            GitHubHelper.octokit = githubExports.getOctokit(token);
-            await GitHubHelper.git.remote([
-                'set-url',
-                'origin',
-                `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
-            ]);
-        }
-        else {
-            throw new Error('Missing token action input');
-        }
-        GitHubHelper.baseParams = {
-            owner: GitHubHelper.owner,
-            repo: GitHubHelper.repository
-        };
-        coreExports.info('Using base parameters for octokit: \n' + JSON.stringify(GitHubHelper.baseParams, null, 4));
-        GitHubHelper.latestUrl = `https://api.github.com/repos/${GitHubHelper.owner}/${GitHubHelper.repository}/releases/latest`;
     }
     static setGitHubEnvVariable(variableName, value) {
         coreExports.exportVariable(variableName, value);
@@ -138549,20 +138554,26 @@ MSync.formatBytes = (size) => {
 
 class AppImageTool {
     constructor() {
-        this.actionDir = process.env.GITHUB_ACTION_PATH;
-        this.appimagetoolPath = path__namespace.join(this.actionDir, 'resources', 'appimagetool');
-        this.apprunLocalFile = path__namespace.join(this.actionDir, 'resources', 'AppRun');
-        this.autoupLocalFile = path__namespace.join(this.actionDir, 'dist', 'autoupdate.cjs.js');
-        this.tmpPath = fs__namespace.mkdtempSync(path__namespace.join(require$$0__namespace.tmpdir(), 'create-appimage-'));
-        this.apprunFile = path__namespace.join(this.tmpPath, 'AppRun');
-        this.autoupFolder = path__namespace.join(this.tmpPath, 'usr', 'bin', 'autoupdate');
-        this.autoupFile = path__namespace.join(this.autoupFolder, 'autoupdate.cjs.js');
-        coreExports.info(`Using tmp file '${this.tmpPath}'`);
-        coreExports.info(path__namespace.resolve(this.apprunLocalFile));
-        fs__namespace.copyFileSync(this.apprunLocalFile, this.apprunFile);
-        fs__namespace.mkdirSync(this.autoupFolder, { recursive: true });
-        fs__namespace.copyFileSync(this.autoupLocalFile, this.autoupFile);
-        fs__namespace.chmodSync(this.apprunFile, 0o777);
+        try {
+            coreExports.startGroup('AppImageTool initialization');
+            this.actionDir = process.env.GITHUB_ACTION_PATH;
+            this.appimagetoolPath = path__namespace.join(this.actionDir, 'resources', 'appimagetool');
+            this.apprunLocalFile = path__namespace.join(this.actionDir, 'resources', 'AppRun');
+            this.autoupLocalFile = path__namespace.join(this.actionDir, 'dist', 'autoupdate.cjs.js');
+            this.tmpPath = fs__namespace.mkdtempSync(path__namespace.join(require$$0__namespace.tmpdir(), 'create-appimage-'));
+            this.apprunFile = path__namespace.join(this.tmpPath, 'AppRun');
+            this.autoupFolder = path__namespace.join(this.tmpPath, 'usr', 'bin', 'autoupdate');
+            this.autoupFile = path__namespace.join(this.autoupFolder, 'autoupdate.cjs.js');
+            coreExports.info(`Using tmp file '${this.tmpPath}'`);
+            coreExports.info(path__namespace.resolve(this.apprunLocalFile));
+            fs__namespace.copyFileSync(this.apprunLocalFile, this.apprunFile);
+            fs__namespace.mkdirSync(this.autoupFolder, { recursive: true });
+            fs__namespace.copyFileSync(this.autoupLocalFile, this.autoupFile);
+            fs__namespace.chmodSync(this.apprunFile, 0o777);
+        }
+        finally {
+            coreExports.endGroup();
+        }
     }
     createResources(name, version, icon, entrypoint, desktopPath) {
         try {
@@ -138891,10 +138902,12 @@ function getErrorMessage(error) {
 }
 async function run() {
     try {
+        coreExports.info(`${name} version ${version}`);
+        coreExports.startGroup('Environment info');
+        coreExports.info(JSON.stringify(process.env, null, 4));
+        coreExports.endGroup();
         await GitHubHelper.initialize();
-        const forElectron = coreExports.getInput('is_electron') != undefined
-            ? String(coreExports.getInput('is_electron')) == 'true'
-            : false;
+        const forElectron = coreExports.getInput('electron') != undefined ? String(coreExports.getInput('electron')) == 'true' : false;
         coreExports.info(`Input value for is_electron: ${forElectron}`);
         if (forElectron) {
             coreExports.info('Running action for Electron app');
