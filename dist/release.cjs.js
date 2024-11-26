@@ -118397,7 +118397,7 @@ class GitHubHelper {
     static async checkUpdateRequired(newVersion) {
         let update = false;
         const vers = await this.getLatestVersion();
-        if (vers && vers !== newVersion) {
+        if (vers !== newVersion) {
             coreExports.info(`New available version ${vers} -> ${newVersion}`);
             update = true;
         }

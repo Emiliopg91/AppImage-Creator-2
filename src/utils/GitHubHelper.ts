@@ -48,7 +48,7 @@ export class GitHubHelper {
       'Using base parameters for octokit: \n' + JSON.stringify(GitHubHelper.baseParams, null, 4)
     );
 
-    GitHubHelper.latestUrl = `https://api.github.com/repos/${GitHubHelper.repository}/${GitHubHelper.owner}/releases/latest`;
+    GitHubHelper.latestUrl = `https://api.github.com/repos/${GitHubHelper.owner}/${GitHubHelper.repository}/releases/latest`;
   }
 
   public static setGitHubEnvVariable(variableName: string, value: string): void {
