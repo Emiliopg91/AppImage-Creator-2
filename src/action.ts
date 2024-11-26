@@ -12,6 +12,10 @@ function getErrorMessage(error: unknown): string {
 
 export async function run(): Promise<void> {
   try {
+    core.startGroup('Environment info');
+    core.info(JSON.stringify(process.env, null, 4));
+    core.endGroup();
+
     await GitHubHelper.initialize();
 
     const forElectron =
