@@ -27294,9 +27294,6 @@ function requireCore () {
 
 var coreExports = requireCore();
 
-var name = "appimage-creator-action";
-var version = "1.0.10";
-
 /*! js-yaml 4.1.0 https://github.com/nodeca/js-yaml @license MIT */
 function isNothing(subject) {
   return (typeof subject === 'undefined') || (subject === null);
@@ -138902,7 +138899,10 @@ function getErrorMessage(error) {
 }
 async function run() {
     try {
-        coreExports.info(`${name} version ${version}`);
+        const packageJsonPath = path.join(process.cwd(), 'package.json');
+        const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+        const version = packageJson.version;
+        coreExports.info(`Running action version ${version}`);
         coreExports.startGroup('Environment info');
         coreExports.info(JSON.stringify(process.env, null, 4));
         coreExports.endGroup();
