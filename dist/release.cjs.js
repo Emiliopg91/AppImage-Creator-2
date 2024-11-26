@@ -118343,7 +118343,7 @@ init_git_response_error();
 var simpleGit = gitInstanceFactory;
 
 class GitHubHelper {
-    static initialize() {
+    static async initialize() {
         if (process.env.GITHUB_REPOSITORY) {
             [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
         }
@@ -118359,6 +118359,11 @@ class GitHubHelper {
         if (coreExports.getInput('token') || process.env.GITHUB_TOKEN) {
             const token = coreExports.getInput('token') || process.env.GITHUB_TOKEN;
             GitHubHelper.octokit = githubExports.getOctokit(token);
+            await GitHubHelper.git.remote([
+                'set-url',
+                'origin',
+                `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
+            ]);
         }
         else {
             throw new Error('Missing token action input');
