@@ -21,7 +21,7 @@ export class AppImageTool {
   public autoupFile: string;
 
   constructor() {
-    this.actionDir = GitHubHelper.actionPath;
+    this.actionDir = process.env.GITHUB_ACTION_PATH!;
     this.appimagetoolPath = path.join(this.actionDir, 'resources', 'appimagetool');
     this.apprunLocalFile = path.join(this.actionDir, 'resources', 'AppRun');
     this.autoupLocalFile = path.join(this.actionDir, 'dist', 'autoupdate.cjs.js');

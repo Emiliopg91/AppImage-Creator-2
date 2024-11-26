@@ -5,6 +5,7 @@ import { GitHubHelper } from './utils/GitHubHelper';
 async function main(): Promise<void> {
   try {
     GitHubHelper.initialize();
+    console.log('ENTORNO:');
     await GitHubHelper.deleteRelease('latest');
     await GitHubHelper.deleteTag('latest');
 
@@ -21,7 +22,7 @@ async function main(): Promise<void> {
     await GitHubHelper.createRelease(newVersion);
     await GitHubHelper.createTag('latest');
     await GitHubHelper.createRelease('latest');
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error en la operación de GitHub:', error);
     process.exit(1);
   }

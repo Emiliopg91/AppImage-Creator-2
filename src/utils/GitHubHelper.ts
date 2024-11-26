@@ -5,9 +5,8 @@ import { GitHub } from '@actions/github/lib/utils';
 export class GitHubHelper {
   public static repository = '';
   public static owner = '';
-  public static actionPath = '';
   public static workspacePath = '';
-  public static octokit: InstanceType<typeof GitHub> | undefined = github.getOctokit('');
+  public static octokit: InstanceType<typeof GitHub> | undefined = undefined;
   public static baseParams: { repo: string; owner: string } = {
     owner: '',
     repo: ''
@@ -16,13 +15,9 @@ export class GitHubHelper {
 
   public static initialize(): void {
     if (process.env.GITHUB_REPOSITORY) {
-      [GitHubHelper.repository, GitHubHelper.owner] = process.env.GITHUB_REPOSITORY.split('/');
-    } else throw new Error('Missing GITHUB_REPOSITORY environment variable');
-
-    if (process.env.GITHUB_ACTION_PATH) {
-      GitHubHelper.actionPath = process.env.GITHUB_ACTION_PATH;
+      [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
     } else {
-      throw new Error('Missing GITHUB_ACTION_PATH environment variable');
+      throw new Error('Missing GITHUB_REPOSITORY environment variable');
     }
 
     if (process.env.GITHUB_WORKSPACE) {
@@ -41,6 +36,9 @@ export class GitHubHelper {
       owner: GitHubHelper.owner,
       repo: GitHubHelper.repository
     };
+    core.info(
+      'Using base parameters for octokit: \n' + JSON.stringify(GitHubHelper.baseParams, null, 4)
+    );
 
     GitHubHelper.latestUrl = `https://api.github.com/repos/${GitHubHelper.repository}/${GitHubHelper.owner}/releases/latest`;
   }
@@ -78,26 +76,42 @@ export class GitHubHelper {
   }
 
   static async deleteRelease(tag: string): Promise<void> {
-    core.info(`Deleting release for tag '${tag}'`);
-    const release = await GitHubHelper.octokit!.rest.repos.getReleaseByTag({
-      ...GitHubHelper.baseParams,
-      tag
-    });
-    await GitHubHelper.octokit!.rest.repos.deleteRelease({
-      ...GitHubHelper.baseParams,
-      release_id: release.data.id
-    });
-    core.info(`Deleted`);
+    try {
+      core.info(`Deleting release for tag '${tag}'`);
+      const release = await GitHubHelper.octokit!.rest.repos.getReleaseByTag({
+        ...GitHubHelper.baseParams,
+        tag
+      });
+      await GitHubHelper.octokit!.rest.repos.deleteRelease({
+        ...GitHubHelper.baseParams,
+        release_id: release.data.id
+      });
+      core.info(`Deleted`);
+    } catch (err: any) {
+      if (err.status && err.status == 404) {
+        core.warning("Release doesn't exist");
+      } else {
+        throw err;
+      }
+    }
   }
 
   static async deleteTag(tag: string): Promise<void> {
-    core.info(`Deleting tag '${tag}'`);
-    await GitHubHelper.octokit!.rest.git.deleteRef({
-      repo: GitHubHelper.repository!,
-      owner: GitHubHelper.owner!,
-      ref: `refs/tags/${tag}`
-    });
-    core.info(`Deleted`);
+    try {
+      core.info(`Deleting tag '${tag}'`);
+      await GitHubHelper.octokit!.rest.git.deleteRef({
+        repo: GitHubHelper.repository!,
+        owner: GitHubHelper.owner!,
+        ref: `tags/${tag}`
+      });
+      core.info(`Deleted`);
+    } catch (err: any) {
+      if (err.status && err.status == 404) {
+        core.warning("Tag doesn't exist");
+      } else {
+        throw err;
+      }
+    }
   }
 
   static async createTag(tag: string): Promise<void> {
