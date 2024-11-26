@@ -14,14 +14,6 @@ function getErrorMessage(error: unknown): string {
 
 export async function run(): Promise<void> {
   try {
-    const packageJsonPath = path.join(process.cwd(), 'package.json');
-    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-    const version = packageJson.version;
-    core.info(`Running action version ${version}`);
-    core.startGroup('Environment info');
-    core.info(JSON.stringify(process.env, null, 4));
-    core.endGroup();
-
     await GitHubHelper.initialize();
 
     const forElectron =
