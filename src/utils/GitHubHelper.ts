@@ -15,7 +15,7 @@ export class GitHubHelper {
   public static latestUrl = '';
   public static git = simpleGit();
 
-  public static initialize(): void {
+  public static async initialize(): Promise<void> {
     if (process.env.GITHUB_REPOSITORY) {
       [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
     } else {
@@ -31,6 +31,11 @@ export class GitHubHelper {
     if (core.getInput('token') || process.env.GITHUB_TOKEN) {
       const token = core.getInput('token') || process.env.GITHUB_TOKEN!;
       GitHubHelper.octokit = github.getOctokit(token);
+      await GitHubHelper.git.remote([
+        'set-url',
+        'origin',
+        `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
+      ]);
     } else {
       throw new Error('Missing token action input');
     }

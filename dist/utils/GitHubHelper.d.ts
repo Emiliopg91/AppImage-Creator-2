@@ -10,7 +10,7 @@ export declare class GitHubHelper {
     };
     static latestUrl: string;
     static git: import("simple-git").SimpleGit;
-    static initialize(): void;
+    static initialize(): Promise<void>;
     static setGitHubEnvVariable(variableName: string, value: string): void;
     static setGitHubOutVariable(variableName: string, value: string): void;
     static getLatestVersion(): Promise<string | undefined>;
