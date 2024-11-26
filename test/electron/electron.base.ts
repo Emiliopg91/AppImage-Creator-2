@@ -24,7 +24,8 @@ export const actionPath = path.join(workspacePath, 'action');
 const envMap: Record<string, string> = {
   GITHUB_REPOSITORY: 'Emiliopg91/RogControlCenter',
   GITHUB_ACTION_PATH: actionPath,
-  GITHUB_WORKSPACE: workspacePath
+  GITHUB_WORKSPACE: workspacePath,
+  INPUT_ELECTRON: 'true'
 };
 
 const setEnvironmentVariables = (env: Record<string, string>): void => {
