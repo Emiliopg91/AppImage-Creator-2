@@ -77,7 +77,7 @@ export class GitHubHelper {
   static async checkUpdateRequired(newVersion: string): Promise<boolean> {
     let update = false;
     const vers = await this.getLatestVersion();
-    if (vers && vers !== newVersion) {
+    if (vers !== newVersion) {
       core.info(`New available version ${vers} -> ${newVersion}`);
       update = true;
     } else {
