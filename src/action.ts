@@ -14,8 +14,12 @@ export async function run(): Promise<void> {
   try {
     await GitHubHelper.initialize();
 
-    core.info(`Input value for is_electron: ${String(core.getInput('is_electron'))}`);
-    if (String(core.getInput('is_electron')) == 'true') {
+    const forElectron =
+      core.getInput('is_electron') != undefined
+        ? String(core.getInput('is_electron')) == 'true'
+        : false;
+    core.info(`Input value for is_electron: ${forElectron}`);
+    if (forElectron) {
       core.info('Running action for Electron app');
       await ElectronAppImageProcessor.processAppImage();
     } else {
