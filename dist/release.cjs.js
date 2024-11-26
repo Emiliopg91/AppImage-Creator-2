@@ -118491,7 +118491,7 @@ async function main() {
         require$$0$2.writeFileSync(versionFilePath, newVersion, 'utf-8');
         require$$2$3.execSync('git config --global user.email "actions@github.com"');
         require$$2$3.execSync('git config --global user.name "github-actions"');
-        await GitHubHelper.stashPath(require$$1$4.resolve(process.cwd(), 'dist'));
+        await GitHubHelper.stashPath(require$$1$4.resolve(process.cwd()));
         await GitHubHelper.commit(`[ci skip] Release for version ${newVersion}`);
         await GitHubHelper.push();
         await GitHubHelper.createTag(newVersion);
