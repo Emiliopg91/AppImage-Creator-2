@@ -26,4 +26,8 @@ async function main(): Promise<void> {
   }
 }
 
-main();
+if (require.main === module) {
+  (async (): Promise<void> => {
+    await main();
+  })();
+}
