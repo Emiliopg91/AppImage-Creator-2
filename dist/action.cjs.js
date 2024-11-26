@@ -138892,8 +138892,11 @@ function getErrorMessage(error) {
 async function run() {
     try {
         await GitHubHelper.initialize();
-        coreExports.info(`Input value for is_electron: ${String(coreExports.getInput('is_electron'))}`);
-        if (String(coreExports.getInput('is_electron')) == 'true') {
+        const forElectron = coreExports.getInput('is_electron') != undefined
+            ? String(coreExports.getInput('is_electron')) == 'true'
+            : false;
+        coreExports.info(`Input value for is_electron: ${forElectron}`);
+        if (forElectron) {
             coreExports.info('Running action for Electron app');
             await ElectronAppImageProcessor.processAppImage();
         }
