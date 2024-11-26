@@ -138565,96 +138565,113 @@ class AppImageTool {
         fs__namespace.chmodSync(this.apprunFile, 0o777);
     }
     createResources(name, version, icon, entrypoint, desktopPath) {
-        const prevCwd = process.cwd();
-        // Cambiar directorio actual
-        process.chdir(this.tmpPath);
-        const srcDir = path__namespace.dirname(entrypoint);
-        const usrBin = path__namespace.resolve(path__namespace.join('.', 'usr', 'bin', name.replace(/\s+/g, '_')));
-        const logoPath = path__namespace.resolve(path__namespace.join('.', 'logo.png'));
-        const desktopEntry = path__namespace.join(this.tmpPath, `${name}.desktop`);
-        fs__namespace.cpSync(srcDir, usrBin, { recursive: true });
-        fs__namespace.copyFileSync(icon, logoPath);
-        const desktopContent = fs__namespace.readFileSync(desktopPath, 'utf-8');
-        const newContent = desktopContent
-            .replace('{name}', name.replace('-AppImage', ''))
-            .replace('{version}', version)
-            .replace('{entrypoint}', path__namespace.basename(entrypoint))
-            .replace('{icon}', 'logo')
-            .replace('{url}', `https://github.com/${GitHubHelper.repository}`);
-        fs__namespace.writeFileSync(desktopEntry, newContent);
-        const desktop = new DesktopParser(desktopEntry);
-        desktop.data['Desktop Entry']['X-GitHub-Api'] = GitHubHelper.latestUrl;
-        desktop.persist(desktopEntry);
-        process.chdir(prevCwd);
+        try {
+            coreExports.startGroup('Creating squashfs-root');
+            const prevCwd = process.cwd();
+            process.chdir(this.tmpPath);
+            const srcDir = path__namespace.dirname(entrypoint);
+            const usrBin = path__namespace.resolve(path__namespace.join('.', 'usr', 'bin', name.replace(/\s+/g, '_')));
+            const logoPath = path__namespace.resolve(path__namespace.join('.', 'logo.png'));
+            const desktopEntry = path__namespace.join(this.tmpPath, `${name}.desktop`);
+            fs__namespace.cpSync(srcDir, usrBin, { recursive: true });
+            fs__namespace.copyFileSync(icon, logoPath);
+            const desktopContent = fs__namespace.readFileSync(desktopPath, 'utf-8');
+            const newContent = desktopContent
+                .replace('{name}', name.replace('-AppImage', ''))
+                .replace('{version}', version)
+                .replace('{entrypoint}', path__namespace.basename(entrypoint))
+                .replace('{icon}', 'logo')
+                .replace('{url}', `https://github.com/${GitHubHelper.repository}`);
+            fs__namespace.writeFileSync(desktopEntry, newContent);
+            const desktop = new DesktopParser(desktopEntry);
+            desktop.data['Desktop Entry']['X-GitHub-Api'] = GitHubHelper.latestUrl;
+            desktop.persist(desktopEntry);
+            process.chdir(prevCwd);
+        }
+        finally {
+            coreExports.endGroup();
+        }
     }
     async createAppImage(name, version, directory = this.tmpPath) {
-        const prevCwd = process.cwd();
-        process.chdir(directory);
-        const fileName = name.replace(/[^a-zA-Z0-9]/g, '-');
-        const appImagePath = path__namespace.join(this.actionDir, `${fileName}.AppImage`);
-        coreExports.info(`Generating AppImage file '${fileName}'`);
-        const command = `ARCH=x86_64 ${this.appimagetoolPath} --comp gzip ${directory} "${appImagePath}" -u "gh-releases-zsync|${GitHubHelper.repository.replace('/', '|')}|latest|${fileName}.AppImage.zsync"`;
-        coreExports.info(`Running '${command}'`);
-        await new Promise((resolve, reject) => {
-            (async () => {
-                child_process__namespace.exec(command, (error, stdout, stderr) => {
-                    if (error) {
-                        coreExports.info(stderr);
-                        coreExports.info('Error running command');
-                        reject(error);
-                    }
-                    else {
-                        coreExports.info(stdout);
-                        console.info('Command executed succesfully');
-                        resolve();
-                    }
-                });
-            })();
-        });
-        fs__namespace.copyFileSync(path__namespace.join(directory, `${path__namespace.basename(appImagePath)}.zsync`), `${appImagePath}.zsync`);
-        coreExports.info(`Generating MSync file '${appImagePath}.msync'`);
-        MSync.fromBinary(appImagePath).toFile(`${appImagePath}.msync`);
-        GitHubHelper.setGitHubEnvVariable('APPIMAGE_PATH', appImagePath);
-        GitHubHelper.setGitHubEnvVariable('MSYNC_PATH', `${appImagePath}.msync`);
-        const latestLinuxPath = path__namespace.join(this.actionDir, 'latest-linux.yml');
-        coreExports.info('Generating latest-linux.yml');
-        const sha512 = this.getSha512(appImagePath);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const data = {
-            version: version,
-            files: {
-                url: `${fileName}.AppImage`,
+        try {
+            coreExports.startGroup('Creating AppImage');
+            const prevCwd = process.cwd();
+            process.chdir(directory);
+            const fileName = name.replace(/[^a-zA-Z0-9]/g, '-');
+            const appImagePath = path__namespace.join(this.actionDir, `${fileName}.AppImage`);
+            coreExports.info(`Generating AppImage file '${fileName}'`);
+            const command = `ARCH=x86_64 ${this.appimagetoolPath} --comp gzip ${directory} "${appImagePath}" -u "gh-releases-zsync|${GitHubHelper.owner}|${GitHubHelper.repository}|latest|${fileName}.AppImage.zsync"`;
+            coreExports.info(`Running '${command}'`);
+            await new Promise((resolve, reject) => {
+                (async () => {
+                    child_process__namespace.exec(command, (error, stdout, stderr) => {
+                        if (error) {
+                            coreExports.info(stderr);
+                            coreExports.info('Error running command');
+                            reject(error);
+                        }
+                        else {
+                            coreExports.info(stdout);
+                            console.info('Command executed succesfully');
+                            resolve();
+                        }
+                    });
+                })();
+            });
+            fs__namespace.copyFileSync(path__namespace.join(directory, `${path__namespace.basename(appImagePath)}.zsync`), `${appImagePath}.zsync`);
+            coreExports.info(`Generating MSync file '${appImagePath}.msync'`);
+            MSync.fromBinary(appImagePath).toFile(`${appImagePath}.msync`);
+            GitHubHelper.setGitHubEnvVariable('APPIMAGE_PATH', appImagePath);
+            GitHubHelper.setGitHubEnvVariable('MSYNC_PATH', `${appImagePath}.msync`);
+            const latestLinuxPath = path__namespace.join(this.actionDir, 'latest-linux.yml');
+            coreExports.info('Generating latest-linux.yml');
+            const sha512 = this.getSha512(appImagePath);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const data = {
+                version: version,
+                files: {
+                    url: `${fileName}.AppImage`,
+                    sha512: sha512,
+                    size: fs__namespace.statSync(appImagePath).size,
+                    blockMapSize: Math.floor(fs__namespace.statSync(appImagePath).size / 1024)
+                },
+                path: `${fileName}.AppImage`,
                 sha512: sha512,
-                size: fs__namespace.statSync(appImagePath).size,
-                blockMapSize: Math.floor(fs__namespace.statSync(appImagePath).size / 1024)
-            },
-            path: `${fileName}.AppImage`,
-            sha512: sha512,
-            releaseDate: this.getReleaseDate(appImagePath)
-        };
-        fs__namespace.writeFileSync(latestLinuxPath, dump(data, { noRefs: true }));
-        GitHubHelper.setGitHubEnvVariable('LATEST_LINUX_PATH', latestLinuxPath);
-        process.chdir(prevCwd);
+                releaseDate: this.getReleaseDate(appImagePath)
+            };
+            fs__namespace.writeFileSync(latestLinuxPath, dump(data, { noRefs: true }));
+            GitHubHelper.setGitHubEnvVariable('LATEST_LINUX_PATH', latestLinuxPath);
+            process.chdir(prevCwd);
+        }
+        finally {
+            coreExports.endGroup();
+        }
     }
     async extractAppImage(file) {
-        const command = `${file} --appimage-extract`;
-        coreExports.info(`Running '${command}'`);
-        await new Promise((resolve, reject) => {
-            (async () => {
-                child_process__namespace.exec(command, (error, stdout, stderr) => {
-                    if (error) {
-                        coreExports.info(stderr);
-                        coreExports.info('Error running command');
-                        reject(error);
-                    }
-                    else {
-                        coreExports.info(stdout);
-                        console.info('Command executed succesfully');
-                        resolve();
-                    }
-                });
-            })();
-        });
+        try {
+            coreExports.startGroup('Extracting AppImage');
+            const command = `${file} --appimage-extract`;
+            coreExports.info(`Running '${command}'`);
+            await new Promise((resolve, reject) => {
+                (async () => {
+                    child_process__namespace.exec(command, (error, stdout, stderr) => {
+                        if (error) {
+                            coreExports.info(stderr);
+                            coreExports.info('Error running command');
+                            reject(error);
+                        }
+                        else {
+                            coreExports.info(stdout);
+                            console.info('Command executed succesfully');
+                            resolve();
+                        }
+                    });
+                })();
+            });
+        }
+        finally {
+            coreExports.endGroup();
+        }
     }
     getReleaseDate(path) {
         const stats = fs__namespace.statSync(path);
@@ -138684,6 +138701,7 @@ class InputParameters {
     }
     static fromDesktopFile() {
         const desktopFile = InputParameters.findDesktopFile();
+        coreExports.startGroup('Desktop file handling');
         coreExports.info('Loading desktop file data');
         const desktop = new DesktopParser(desktopFile);
         const name = desktop.data['Desktop Entry']['Name'];
@@ -138719,6 +138737,9 @@ class InputParameters {
         catch (error) {
             console.error('Error while running version command:', error);
             throw new Error(`Command failed: ${error}`);
+        }
+        finally {
+            coreExports.endGroup();
         }
     }
     static runCommand(command) {
@@ -138760,66 +138781,81 @@ class BinaryAppImageProcessor {
 
 class ElectronAppImageProcessor {
     static removeUnneededDistEntries() {
-        coreExports.info('Removing unneeded entries on dist folder');
-        const files = fs__namespace.readdirSync('.');
-        files.forEach((file) => {
-            if (!file.endsWith('.AppImage')) {
-                const filePath = path__namespace.join('.', file);
-                if (fs__namespace.statSync(filePath).isFile()) {
-                    fs__namespace.unlinkSync(filePath);
+        try {
+            coreExports.startGroup('Removing unneeded entries on dist folder');
+            const files = fs__namespace.readdirSync('.');
+            files.forEach((file) => {
+                if (!file.endsWith('.AppImage')) {
+                    const filePath = path__namespace.join('.', file);
+                    if (fs__namespace.statSync(filePath).isFile()) {
+                        fs__namespace.unlinkSync(filePath);
+                    }
+                    else {
+                        fs__namespace.rmdirSync(filePath, { recursive: true });
+                    }
                 }
-                else {
-                    fs__namespace.rmdirSync(filePath, { recursive: true });
-                }
-            }
-        });
+            });
+        }
+        finally {
+            coreExports.endGroup();
+        }
     }
     static findAppImage() {
-        coreExports.info('Looking for AppImage file');
-        const files = fs__namespace.readdirSync('.');
-        for (const file of files) {
-            if (file.endsWith('.bk.AppImage')) {
-                coreExports.info(`Restoring AppImage for tests: ${file}`);
-                fs__namespace.renameSync(file, file.replace('.bk.', '.'));
-                break;
+        try {
+            coreExports.startGroup('Looking for AppImage file');
+            const files = fs__namespace.readdirSync('.');
+            for (const file of files) {
+                if (file.endsWith('.bk.AppImage')) {
+                    coreExports.info(`Restoring AppImage for tests: ${file}`);
+                    fs__namespace.renameSync(file, file.replace('.bk.', '.'));
+                    break;
+                }
             }
-        }
-        for (const file of files) {
-            if (file.endsWith('.AppImage')) {
-                const filePath = path__namespace.resolve(file);
-                coreExports.info(`Found AppImage: ${filePath}`);
-                return filePath;
+            for (const file of files) {
+                if (file.endsWith('.AppImage')) {
+                    const filePath = path__namespace.resolve(file);
+                    coreExports.info(`Found AppImage: ${filePath}`);
+                    return filePath;
+                }
             }
+            return null;
         }
-        return null;
+        finally {
+            coreExports.endGroup();
+        }
     }
     static modifySquashFSRoot(appImageTool, appName, latestUrl) {
-        coreExports.info('Modifying squashfs-root');
-        const pwd = process.cwd();
-        const squashFSRootDir = path__namespace.join(pwd, 'squashfs-root');
-        process.chdir(squashFSRootDir);
-        fs__namespace.rmSync('AppRun', { force: true });
-        fs__namespace.rmSync('.DirIcon', { force: true });
-        const statics = ['usr', `${appName.toLowerCase()}.png`, `${appName.toLowerCase()}.desktop`];
-        fs__namespace.mkdirSync(appName);
-        const files = fs__namespace.readdirSync('.');
-        files.forEach((file) => {
-            if (!statics.includes(file) && file !== appName) {
-                fs__namespace.renameSync(file, path__namespace.join(appName, file));
-            }
-        });
-        fs__namespace.copyFileSync(appImageTool.apprunFile, path__namespace.basename(appImageTool.apprunFile));
-        const autoupdateFolder = path__namespace.join(squashFSRootDir, 'usr', 'bin', 'autoupdate');
-        fs__namespace.mkdirSync(autoupdateFolder, { recursive: true });
-        fs__namespace.copyFileSync(appImageTool.autoupFile, path__namespace.join(autoupdateFolder, path__namespace.basename(appImageTool.autoupFile)));
-        fs__namespace.renameSync(appName, path__namespace.join('usr', 'bin', appName));
-        coreExports.info('Modifying desktop file');
-        const desktop = new DesktopParser(`${appName.toLowerCase()}.desktop`);
-        desktop.data['Desktop Entry']['Exec'] = `${appName}/${appName.toLowerCase()}`;
-        desktop.data['Desktop Entry']['X-GitHub-Api'] = latestUrl;
-        desktop.persist(`${appName.toLowerCase()}.desktop`);
-        process.chdir(pwd);
-        fs__namespace.renameSync('squashfs-root', appName);
+        try {
+            coreExports.startGroup('Modifying squashfs-root');
+            const pwd = process.cwd();
+            const squashFSRootDir = path__namespace.join(pwd, 'squashfs-root');
+            process.chdir(squashFSRootDir);
+            fs__namespace.rmSync('AppRun', { force: true });
+            fs__namespace.rmSync('.DirIcon', { force: true });
+            const statics = ['usr', `${appName.toLowerCase()}.png`, `${appName.toLowerCase()}.desktop`];
+            fs__namespace.mkdirSync(appName);
+            const files = fs__namespace.readdirSync('.');
+            files.forEach((file) => {
+                if (!statics.includes(file) && file !== appName) {
+                    fs__namespace.renameSync(file, path__namespace.join(appName, file));
+                }
+            });
+            fs__namespace.copyFileSync(appImageTool.apprunFile, path__namespace.basename(appImageTool.apprunFile));
+            const autoupdateFolder = path__namespace.join(squashFSRootDir, 'usr', 'bin', 'autoupdate');
+            fs__namespace.mkdirSync(autoupdateFolder, { recursive: true });
+            fs__namespace.copyFileSync(appImageTool.autoupFile, path__namespace.join(autoupdateFolder, path__namespace.basename(appImageTool.autoupFile)));
+            fs__namespace.renameSync(appName, path__namespace.join('usr', 'bin', appName));
+            coreExports.info('Modifying desktop file');
+            const desktop = new DesktopParser(`${appName.toLowerCase()}.desktop`);
+            desktop.data['Desktop Entry']['Exec'] = `${appName}/${appName.toLowerCase()}`;
+            desktop.data['Desktop Entry']['X-GitHub-Api'] = latestUrl;
+            desktop.persist(`${appName.toLowerCase()}.desktop`);
+            process.chdir(pwd);
+            fs__namespace.renameSync('squashfs-root', appName);
+        }
+        finally {
+            coreExports.endGroup();
+        }
     }
     static async processAppImage() {
         const appImageTool = new AppImageTool();
