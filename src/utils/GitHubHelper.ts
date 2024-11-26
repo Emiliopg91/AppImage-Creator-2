@@ -60,12 +60,18 @@ export class GitHubHelper {
   }
 
   static async getLatestVersion(): Promise<string | undefined> {
-    const response = await GitHubHelper.octokit!.rest.repos.getLatestRelease({
-      ...GitHubHelper.baseParams
-    });
-    if (response.data?.tag_name) return response.data.tag_name;
-
-    return undefined;
+    try {
+      const response = await GitHubHelper.octokit!.rest.repos.getLatestRelease({
+        ...GitHubHelper.baseParams
+      });
+      return response.data.tag_name;
+    } catch (err: any) {
+      if (err.status && err.status == 404) {
+        core.warning('No previous version published');
+        return undefined;
+      }
+      throw err;
+    }
   }
 
   static async checkUpdateRequired(newVersion: string): Promise<boolean> {

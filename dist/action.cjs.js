@@ -138849,7 +138849,7 @@ function getErrorMessage(error) {
 }
 async function run() {
     try {
-        GitHubHelper.initialize();
+        await GitHubHelper.initialize();
         if (String(coreExports.getInput('is_electron')) == 'true') {
             await ElectronAppImageProcessor.processAppImage();
         }
