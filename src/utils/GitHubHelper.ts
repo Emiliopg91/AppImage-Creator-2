@@ -88,7 +88,7 @@ export class GitHubHelper {
       });
       core.info(`Deleted`);
     } catch (err: any) {
-      if (err.status && err.status == 404) {
+      if (err.status && (err.status == 404 || err.status == 422)) {
         core.warning("Release doesn't exist");
       } else {
         throw err;
@@ -106,7 +106,7 @@ export class GitHubHelper {
       });
       core.info(`Deleted`);
     } catch (err: any) {
-      if (err.status && err.status == 404) {
+      if (err.status && (err.status == 404 || err.status == 422)) {
         core.warning("Tag doesn't exist");
       } else {
         throw err;

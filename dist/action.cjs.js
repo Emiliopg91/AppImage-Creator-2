@@ -114540,8 +114540,11 @@ class GitHubHelper {
             coreExports.info(`Deleted`);
         }
         catch (err) {
-            if (err.status && err.status == 404) {
+            if (err.status && (err.status == 404 || err.status == 422)) {
                 coreExports.warning("Release doesn't exist");
+            }
+            else {
+                throw err;
             }
         }
     }
@@ -114556,8 +114559,11 @@ class GitHubHelper {
             coreExports.info(`Deleted`);
         }
         catch (err) {
-            if (err.status && err.status == 404) {
+            if (err.status && (err.status == 404 || err.status == 422)) {
                 coreExports.warning("Tag doesn't exist");
+            }
+            else {
+                throw err;
             }
         }
     }

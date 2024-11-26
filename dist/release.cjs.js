@@ -112478,8 +112478,11 @@ class GitHubHelper {
             coreExports.info(`Deleted`);
         }
         catch (err) {
-            if (err.status && err.status == 404) {
+            if (err.status && (err.status == 404 || err.status == 422)) {
                 coreExports.warning("Release doesn't exist");
+            }
+            else {
+                throw err;
             }
         }
     }
@@ -112494,8 +112497,11 @@ class GitHubHelper {
             coreExports.info(`Deleted`);
         }
         catch (err) {
-            if (err.status && err.status == 404) {
+            if (err.status && (err.status == 404 || err.status == 422)) {
                 coreExports.warning("Tag doesn't exist");
+            }
+            else {
+                throw err;
             }
         }
     }
@@ -112550,7 +112556,7 @@ async function main() {
         await GitHubHelper.createRelease('latest');
     }
     catch (error) {
-        console.error('Error en la operación de GitHub:', error.status);
+        console.error('Error en la operación de GitHub:', error);
         process.exit(1);
     }
 }
