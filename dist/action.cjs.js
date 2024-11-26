@@ -138899,6 +138899,9 @@ function getErrorMessage(error) {
 }
 async function run() {
     try {
+        coreExports.startGroup('Environment info');
+        coreExports.info(JSON.stringify(process.env, null, 4));
+        coreExports.endGroup();
         await GitHubHelper.initialize();
         const forElectron = coreExports.getInput('electron') != undefined ? String(coreExports.getInput('electron')) == 'true' : false;
         coreExports.info(`Input value for is_electron: ${forElectron}`);
