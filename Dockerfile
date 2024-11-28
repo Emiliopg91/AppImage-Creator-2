@@ -1,5 +1,3 @@
-LABEL org.opencontainers.image.source https://github.com/Emiliopg91/AppImage-Creator-2
-
 FROM docker.io/library/ubuntu:22.04
 
 VOLUME ["/workspace", "/output"]                                                                                                                                
