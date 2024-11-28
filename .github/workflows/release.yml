@@ -49,14 +49,21 @@ jobs:
         run: |
           pnpm build
 
-      - name: Testing
+      - name: Set lowercase repository name
         run: |
-          pnpm test
+          echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
+
+      - name: Set Repository Name in Lowercase
+        run: echo "REPO_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Build Docker Image
-        run: |
-          docker build -t ghcr.io/${{ github.repository }}:latest .
+        run: docker build -t ghcr.io/${REPO_NAME}:latest .
 
       - name: Push Docker Image
+        run: docker push ghcr.io/${REPO_NAME}:latest
+
+      - name: Perform release
         run: |
-          docker push ghcr.io/${{ github.repository }}:latest
+          node dist/release.cjs.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_ACTION_PAT }}
