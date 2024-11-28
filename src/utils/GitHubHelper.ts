@@ -6,7 +6,7 @@ import { simpleGit } from 'simple-git';
 export class GitHubHelper {
   public static repository = '';
   public static owner = '';
-  public static workspacePath = '';
+  public static workspacePath = '/workspace';
   public static octokit: InstanceType<typeof GitHub> | undefined = undefined;
   public static baseParams: { repo: string; owner: string } = {
     owner: '',
@@ -18,29 +18,22 @@ export class GitHubHelper {
   public static async initialize(): Promise<void> {
     try {
       core.startGroup('GitHubHelper initialization');
-      if (process.env.GITHUB_REPOSITORY) {
-        [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
-      } else {
-        throw new Error('Missing GITHUB_REPOSITORY environment variable');
-      }
+      const requiredEnv = ['GITHUB_REPOSITORY', 'GITHUB_TOKEN'];
+      requiredEnv.forEach((key) => {
+        if (process.env[key] == undefined || process.env[key]!.trim() == '') {
+          throw new Error(`Missing ${key} environment variable`);
+        }
+      });
 
-      if (process.env.GITHUB_WORKSPACE) {
-        GitHubHelper.workspacePath = process.env.GITHUB_WORKSPACE;
-      } else {
-        throw new Error('Missing GITHUB_WORKSPACE environment variable');
-      }
+      [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY!.split('/');
 
-      if (core.getInput('token') || process.env.GITHUB_TOKEN) {
-        const token = core.getInput('token') || process.env.GITHUB_TOKEN!;
-        GitHubHelper.octokit = github.getOctokit(token);
-        await GitHubHelper.git.remote([
-          'set-url',
-          'origin',
-          `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
-        ]);
-      } else {
-        throw new Error('Missing token action input');
-      }
+      const token = process.env.GITHUB_TOKEN!;
+      GitHubHelper.octokit = github.getOctokit(token);
+      await GitHubHelper.git.remote([
+        'set-url',
+        'origin',
+        `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
+      ]);
 
       GitHubHelper.baseParams = {
         owner: GitHubHelper.owner,

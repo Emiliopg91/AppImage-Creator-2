@@ -118346,30 +118346,20 @@ class GitHubHelper {
     static async initialize() {
         try {
             coreExports.startGroup('GitHubHelper initialization');
-            if (process.env.GITHUB_REPOSITORY) {
-                [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
-            }
-            else {
-                throw new Error('Missing GITHUB_REPOSITORY environment variable');
-            }
-            if (process.env.GITHUB_WORKSPACE) {
-                GitHubHelper.workspacePath = process.env.GITHUB_WORKSPACE;
-            }
-            else {
-                throw new Error('Missing GITHUB_WORKSPACE environment variable');
-            }
-            if (coreExports.getInput('token') || process.env.GITHUB_TOKEN) {
-                const token = coreExports.getInput('token') || process.env.GITHUB_TOKEN;
-                GitHubHelper.octokit = githubExports.getOctokit(token);
-                await GitHubHelper.git.remote([
-                    'set-url',
-                    'origin',
-                    `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
-                ]);
-            }
-            else {
-                throw new Error('Missing token action input');
-            }
+            const requiredEnv = ['GITHUB_REPOSITORY', 'GITHUB_TOKEN'];
+            requiredEnv.forEach((key) => {
+                if (process.env[key] == undefined || process.env[key].trim() == '') {
+                    throw new Error(`Missing ${key} environment variable`);
+                }
+            });
+            [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
+            const token = process.env.GITHUB_TOKEN;
+            GitHubHelper.octokit = githubExports.getOctokit(token);
+            await GitHubHelper.git.remote([
+                'set-url',
+                'origin',
+                `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
+            ]);
             GitHubHelper.baseParams = {
                 owner: GitHubHelper.owner,
                 repo: GitHubHelper.repository
@@ -118482,7 +118472,7 @@ class GitHubHelper {
 }
 GitHubHelper.repository = '';
 GitHubHelper.owner = '';
-GitHubHelper.workspacePath = '';
+GitHubHelper.workspacePath = '/workspace';
 GitHubHelper.octokit = undefined;
 GitHubHelper.baseParams = {
     owner: '',
