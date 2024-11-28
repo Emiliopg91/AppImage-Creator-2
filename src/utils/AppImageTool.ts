@@ -11,7 +11,9 @@ import { GitHubHelper } from './GitHubHelper';
 import { MSync } from './MSync';
 
 export class AppImageTool {
-  public actionDir: string;
+  public actionDir = '/action';
+  public outDir = '/output';
+  public actualOutDir = '';
   public appimagetoolPath: string;
   public apprunLocalFile: string;
   public autoupLocalFile: string;
@@ -23,7 +25,10 @@ export class AppImageTool {
   constructor() {
     try {
       core.startGroup('AppImageTool initialization');
-      this.actionDir = process.env.GITHUB_ACTION_PATH!;
+      if (process.env.OUTPUT_PATH == undefined || process.env.OUTPUT_PATH!.trim() == '') {
+        throw new Error(`Missing GITHUB_ACTION_PATH environment variable`);
+      }
+      this.actualOutDir = process.env.OUTPUT_PATH;
       this.appimagetoolPath = path.join(this.actionDir, 'resources', 'appimagetool');
       this.apprunLocalFile = path.join(this.actionDir, 'resources', 'AppRun');
       this.autoupLocalFile = path.join(this.actionDir, 'dist', 'autoupdate.cjs.js');
@@ -100,7 +105,10 @@ export class AppImageTool {
       process.chdir(directory);
 
       const fileName = name.replace(/[^a-zA-Z0-9]/g, '-');
-      const appImagePath = path.join(this.actionDir, `${fileName}.AppImage`);
+      const appImagePath = path.join(this.outDir, `${fileName}.AppImage`);
+      const actualAppImagePath = path.join(this.actualOutDir, `${fileName}.AppImage`);
+      const latestLinuxPath = path.join(this.outDir, 'latest-linux.yml');
+      const actualLatestLinuxPath = path.join(this.actualOutDir, 'latest-linux.yml');
 
       core.info(`Generating AppImage file '${fileName}'`);
 
@@ -134,10 +142,9 @@ export class AppImageTool {
       core.info(`Generating MSync file '${appImagePath}.msync'`);
       MSync.fromBinary(appImagePath).toFile(`${appImagePath}.msync`);
 
-      GitHubHelper.setGitHubEnvVariable('APPIMAGE_PATH', appImagePath);
-      GitHubHelper.setGitHubEnvVariable('MSYNC_PATH', `${appImagePath}.msync`);
+      GitHubHelper.setGitHubEnvVariable('APPIMAGE_PATH', actualAppImagePath);
+      GitHubHelper.setGitHubEnvVariable('MSYNC_PATH', `${actualAppImagePath}.msync`);
 
-      const latestLinuxPath = path.join(this.actionDir, 'latest-linux.yml');
       core.info('Generating latest-linux.yml');
 
       const sha512 = this.getSha512(appImagePath);
@@ -158,7 +165,7 @@ export class AppImageTool {
 
       fs.writeFileSync(latestLinuxPath, yaml.dump(data, { noRefs: true }));
 
-      GitHubHelper.setGitHubEnvVariable('LATEST_LINUX_PATH', latestLinuxPath);
+      GitHubHelper.setGitHubEnvVariable('LATEST_LINUX_PATH', actualLatestLinuxPath);
 
       process.chdir(prevCwd);
     } finally {

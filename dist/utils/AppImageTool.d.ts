@@ -1,5 +1,7 @@
 export declare class AppImageTool {
     actionDir: string;
+    outDir: string;
+    actualOutDir: string;
     appimagetoolPath: string;
     apprunLocalFile: string;
     autoupLocalFile: string;

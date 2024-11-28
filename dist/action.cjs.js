@@ -120403,30 +120403,20 @@ class GitHubHelper {
     static async initialize() {
         try {
             coreExports.startGroup('GitHubHelper initialization');
-            if (process.env.GITHUB_REPOSITORY) {
-                [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
-            }
-            else {
-                throw new Error('Missing GITHUB_REPOSITORY environment variable');
-            }
-            if (process.env.GITHUB_WORKSPACE) {
-                GitHubHelper.workspacePath = process.env.GITHUB_WORKSPACE;
-            }
-            else {
-                throw new Error('Missing GITHUB_WORKSPACE environment variable');
-            }
-            if (coreExports.getInput('token') || process.env.GITHUB_TOKEN) {
-                const token = coreExports.getInput('token') || process.env.GITHUB_TOKEN;
-                GitHubHelper.octokit = githubExports.getOctokit(token);
-                await GitHubHelper.git.remote([
-                    'set-url',
-                    'origin',
-                    `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
-                ]);
-            }
-            else {
-                throw new Error('Missing token action input');
-            }
+            const requiredEnv = ['GITHUB_REPOSITORY', 'GITHUB_TOKEN'];
+            requiredEnv.forEach((key) => {
+                if (process.env[key] == undefined || process.env[key].trim() == '') {
+                    throw new Error(`Missing ${key} environment variable`);
+                }
+            });
+            [GitHubHelper.owner, GitHubHelper.repository] = process.env.GITHUB_REPOSITORY.split('/');
+            const token = process.env.GITHUB_TOKEN;
+            GitHubHelper.octokit = githubExports.getOctokit(token);
+            await GitHubHelper.git.remote([
+                'set-url',
+                'origin',
+                `https://${GitHubHelper.owner}:${token}@github.com/${GitHubHelper.owner}/${GitHubHelper.repository}.git`
+            ]);
             GitHubHelper.baseParams = {
                 owner: GitHubHelper.owner,
                 repo: GitHubHelper.repository
@@ -120539,7 +120529,7 @@ class GitHubHelper {
 }
 GitHubHelper.repository = '';
 GitHubHelper.owner = '';
-GitHubHelper.workspacePath = '';
+GitHubHelper.workspacePath = '/workspace';
 GitHubHelper.octokit = undefined;
 GitHubHelper.baseParams = {
     owner: '',
@@ -138551,9 +138541,15 @@ MSync.formatBytes = (size) => {
 
 class AppImageTool {
     constructor() {
+        this.actionDir = '/action';
+        this.outDir = '/output';
+        this.actualOutDir = '';
         try {
             coreExports.startGroup('AppImageTool initialization');
-            this.actionDir = process.env.GITHUB_ACTION_PATH;
+            if (process.env.OUTPUT_PATH == undefined || process.env.OUTPUT_PATH.trim() == '') {
+                throw new Error(`Missing GITHUB_ACTION_PATH environment variable`);
+            }
+            this.actualOutDir = process.env.OUTPUT_PATH;
             this.appimagetoolPath = path__namespace.join(this.actionDir, 'resources', 'appimagetool');
             this.apprunLocalFile = path__namespace.join(this.actionDir, 'resources', 'AppRun');
             this.autoupLocalFile = path__namespace.join(this.actionDir, 'dist', 'autoupdate.cjs.js');
@@ -138606,7 +138602,10 @@ class AppImageTool {
             const prevCwd = process.cwd();
             process.chdir(directory);
             const fileName = name.replace(/[^a-zA-Z0-9]/g, '-');
-            const appImagePath = path__namespace.join(this.actionDir, `${fileName}.AppImage`);
+            const appImagePath = path__namespace.join(this.outDir, `${fileName}.AppImage`);
+            const actualAppImagePath = path__namespace.join(this.actualOutDir, `${fileName}.AppImage`);
+            const latestLinuxPath = path__namespace.join(this.outDir, 'latest-linux.yml');
+            const actualLatestLinuxPath = path__namespace.join(this.actualOutDir, 'latest-linux.yml');
             coreExports.info(`Generating AppImage file '${fileName}'`);
             const command = `ARCH=x86_64 ${this.appimagetoolPath} --comp gzip ${directory} "${appImagePath}" -u "gh-releases-zsync|${GitHubHelper.owner}|${GitHubHelper.repository}|latest|${fileName}.AppImage.zsync"`;
             coreExports.info(`Running '${command}'`);
@@ -138629,9 +138628,8 @@ class AppImageTool {
             fs__namespace.copyFileSync(path__namespace.join(directory, `${path__namespace.basename(appImagePath)}.zsync`), `${appImagePath}.zsync`);
             coreExports.info(`Generating MSync file '${appImagePath}.msync'`);
             MSync.fromBinary(appImagePath).toFile(`${appImagePath}.msync`);
-            GitHubHelper.setGitHubEnvVariable('APPIMAGE_PATH', appImagePath);
-            GitHubHelper.setGitHubEnvVariable('MSYNC_PATH', `${appImagePath}.msync`);
-            const latestLinuxPath = path__namespace.join(this.actionDir, 'latest-linux.yml');
+            GitHubHelper.setGitHubEnvVariable('APPIMAGE_PATH', actualAppImagePath);
+            GitHubHelper.setGitHubEnvVariable('MSYNC_PATH', `${actualAppImagePath}.msync`);
             coreExports.info('Generating latest-linux.yml');
             const sha512 = this.getSha512(appImagePath);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138648,7 +138646,7 @@ class AppImageTool {
                 releaseDate: this.getReleaseDate(appImagePath)
             };
             fs__namespace.writeFileSync(latestLinuxPath, dump(data, { noRefs: true }));
-            GitHubHelper.setGitHubEnvVariable('LATEST_LINUX_PATH', latestLinuxPath);
+            GitHubHelper.setGitHubEnvVariable('LATEST_LINUX_PATH', actualLatestLinuxPath);
             process.chdir(prevCwd);
         }
         finally {
@@ -138900,7 +138898,7 @@ function getErrorMessage(error) {
 async function run() {
     try {
         await GitHubHelper.initialize();
-        const forElectron = process.env.INPUT_ELECTRON != undefined ? process.env.INPUT_ELECTRON == 'true' : false;
+        const forElectron = process.env.IS_ELECTRON != undefined ? process.env.IS_ELECTRON == 'true' : false;
         coreExports.info(`Input value for is_electron: ${forElectron}`);
         if (forElectron) {
             coreExports.info('Running action for Electron app');

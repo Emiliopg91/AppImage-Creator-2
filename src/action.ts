@@ -1,6 +1,4 @@
 import * as core from '@actions/core';
-import fs from 'fs';
-import path from 'path';
 import { inspect } from 'util';
 
 import { BinaryAppImageProcessor } from './business/binaries';
@@ -17,7 +15,7 @@ export async function run(): Promise<void> {
     await GitHubHelper.initialize();
 
     const forElectron =
-      process.env.INPUT_ELECTRON != undefined ? process.env.INPUT_ELECTRON == 'true' : false;
+      process.env.IS_ELECTRON != undefined ? process.env.IS_ELECTRON == 'true' : false;
     core.info(`Input value for is_electron: ${forElectron}`);
     if (forElectron) {
       core.info('Running action for Electron app');

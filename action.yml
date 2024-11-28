@@ -13,19 +13,12 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: echo "INPUT_ELECTRON=${{ inputs.electron }}" >> $GITHUB_ENV
+    - run: mkdir ${{ env.GITHUB_ACTION_PATH }}/output
       shell: bash
-    - run: sudo apt-get update
-      shell: bash
-    - run: sudo apt-get install -y jq libfuse2 zsync
-      shell: bash
-    - run: chmod +x $GITHUB_ACTION_PATH/resources/appimagetool
-      shell: bash
-    - uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    - run: node $GITHUB_ACTION_PATH/dist/action.cjs.js
-      shell: bash
+    - run: |
+        docker run --rm --user root --device /dev/fuse --privileged \
+          -e IS_ELECTRON="true" -e GITHUB_REPOSITORY="${{ env.GITHUB_REPOSITORY }}" -e GITHUB_TOKEN="${{ inputs.token }}" -e OUTPUT_PATH=${{ env.GITHUB_ACTION_PATH }}/output \
+          -v ${{ env.GITHUB_WORKSPACE }}:/workspace -v ${{ env.GITHUB_ACTION_PATH }}/output:/output ghcr.io/emiliopg91/appimage-creator-2:latest
 branding:
   icon: 'target'
   color: 'gray-dark'
