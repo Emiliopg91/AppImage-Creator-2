@@ -106,9 +106,7 @@ export class AppImageTool {
 
       const fileName = name.replace(/[^a-zA-Z0-9]/g, '-');
       const appImagePath = path.join(this.outDir, `${fileName}.AppImage`);
-      const actualAppImagePath = path.join(this.actualOutDir, `${fileName}.AppImage`);
       const latestLinuxPath = path.join(this.outDir, 'latest-linux.yml');
-      const actualLatestLinuxPath = path.join(this.actualOutDir, 'latest-linux.yml');
 
       core.info(`Generating AppImage file '${fileName}'`);
 
@@ -142,9 +140,6 @@ export class AppImageTool {
       core.info(`Generating MSync file '${appImagePath}.msync'`);
       MSync.fromBinary(appImagePath).toFile(`${appImagePath}.msync`);
 
-      GitHubHelper.setGitHubEnvVariable('APPIMAGE_PATH', actualAppImagePath);
-      GitHubHelper.setGitHubEnvVariable('MSYNC_PATH', `${actualAppImagePath}.msync`);
-
       core.info('Generating latest-linux.yml');
 
       const sha512 = this.getSha512(appImagePath);
@@ -164,8 +159,6 @@ export class AppImageTool {
       };
 
       fs.writeFileSync(latestLinuxPath, yaml.dump(data, { noRefs: true }));
-
-      GitHubHelper.setGitHubEnvVariable('LATEST_LINUX_PATH', actualLatestLinuxPath);
 
       process.chdir(prevCwd);
     } finally {
@@ -211,10 +204,5 @@ export class AppImageTool {
     const fileBuffer = fs.readFileSync(path);
     hash.update(fileBuffer);
     return hash.digest('base64');
-  }
-
-  cleanup(): void {
-    core.info('Cleaning workspace and temporary files');
-    fs.rmSync(this.tmpPath, { recursive: true, force: true });
   }
 }

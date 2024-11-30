@@ -1,15 +1,12 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
-import * as fs from 'fs';
 import { simpleGit } from 'simple-git';
 
 export class GitHubHelper {
   public static repository = '';
   public static owner = '';
   public static workspacePath = '/workspace';
-  public static environmentPath = '/files/environment';
-  public static outputPath = '/files/output';
   public static octokit: InstanceType<typeof GitHub> | undefined = undefined;
   public static baseParams: { repo: string; owner: string } = {
     owner: '',
@@ -52,20 +49,6 @@ export class GitHubHelper {
     }
   }
 
-  public static setGitHubEnvVariable(variableName: string, value: string): void {
-    let content = fs.readFileSync(GitHubHelper.environmentPath).toString();
-    content = content + `${variableName}=${value}\n`;
-    fs.writeFileSync(GitHubHelper.environmentPath, content);
-    core.info(`New environment content: ${content}`);
-  }
-
-  public static setGitHubOutVariable(variableName: string, value: string): void {
-    let content = fs.readFileSync(GitHubHelper.outputPath).toString();
-    content = content + `${variableName}=${value}\n`;
-    fs.writeFileSync(GitHubHelper.outputPath, content);
-    core.info(`New output content: ${content}`);
-  }
-
   static async getLatestVersion(): Promise<string | undefined> {
     try {
       const response = await GitHubHelper.octokit!.rest.repos.getLatestRelease({
@@ -91,8 +74,6 @@ export class GitHubHelper {
       core.info('AppImage is up-to-date');
     }
 
-    GitHubHelper.setGitHubEnvVariable('IS_UPDATE', update.toString().toLowerCase());
-    GitHubHelper.setGitHubOutVariable('is_update', update.toString().toLowerCase());
     return update;
   }
 

@@ -109,27 +109,20 @@ export class ElectronAppImageProcessor {
     const appImageTool = new AppImageTool();
     let appImage: string | null = null;
 
-    try {
-      process.chdir(path.join(GitHubHelper.workspacePath, 'dist'));
-      appImage = ElectronAppImageProcessor.findAppImage();
-      const appName = path.basename(appImage!).replace('.AppImage', '');
-      if (appImage === null) {
-        throw new Error('AppImage file not found');
-      }
-
-      ElectronAppImageProcessor.removeUnneededDistEntries();
-      await appImageTool.extractAppImage(appImage);
-      ElectronAppImageProcessor.modifySquashFSRoot(appImageTool, appName, GitHubHelper.latestUrl);
-
-      const desktop = new DesktopParser(path.join(appName, `${appName.toLowerCase()}.desktop`));
-      const version = desktop.data['Desktop Entry']['X-AppImage-Version'];
-
-      await appImageTool.createAppImage(appName, version, path.resolve(appName));
-    } catch (e) {
-      console.error(e);
-      throw e;
-    } finally {
-      appImageTool.cleanup();
+    process.chdir(path.join(GitHubHelper.workspacePath, 'dist'));
+    appImage = ElectronAppImageProcessor.findAppImage();
+    const appName = path.basename(appImage!).replace('.AppImage', '');
+    if (appImage === null) {
+      throw new Error('AppImage file not found');
     }
+
+    ElectronAppImageProcessor.removeUnneededDistEntries();
+    await appImageTool.extractAppImage(appImage);
+    ElectronAppImageProcessor.modifySquashFSRoot(appImageTool, appName, GitHubHelper.latestUrl);
+
+    const desktop = new DesktopParser(path.join(appName, `${appName.toLowerCase()}.desktop`));
+    const version = desktop.data['Desktop Entry']['X-AppImage-Version'];
+
+    await appImageTool.createAppImage(appName, version, path.resolve(appName));
   }
 }

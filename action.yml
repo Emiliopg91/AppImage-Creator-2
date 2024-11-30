@@ -15,17 +15,31 @@ runs:
   steps:
     - run: echo "Using workspace ${GITHUB_WORKSPACE}"
       shell: bash
+    - run: echo "Using action ${GITHUB_ACTION_PATH}"
+      shell: bash
     - run: echo "Using env file ${GITHUB_ENV}"
       shell: bash
     - run: echo "Using output file ${GITHUB_OUT}"
       shell: bash
-    - run: mkdir ${GITHUB_WORKSPACE}/output
+    - run: mkdir output
       shell: bash
     - run: |
         docker run --rm --user root --device /dev/fuse --privileged \
           -e IS_ELECTRON="${{ inputs.electron }}" -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" -e GITHUB_TOKEN="${{ inputs.token }}" -e OUTPUT_PATH=${GITHUB_ACTION_PATH}/output \
-          -v ${GITHUB_WORKSPACE}:/workspace -v ${GITHUB_ACTION_PATH}/output:/output -v ${GITHUB_ENV}:/files/output -v ${GITHUB_OUTPUT}:/files/environment \
+          -v ${GITHUB_WORKSPACE}:/workspace -v ${GITHUB_ACTION_PATH}/output:/output \
           ghcr.io/emiliopg91/appimage-creator-2:latest
+      shell: bash
+    - run: |
+        cd output
+        APPIMAGE=$(ls *.AppImage 2>/dev/null)
+        if [ $? -eq 0 ]; then
+          echo "IS_UPDATE=true" >> $GITHUB_ENV
+          echo "APPIMAGE_PATH=${GITHUB_ACTION_PATH}/output/$(APPIMAGE)" >> $GITHUB_ENV
+          echo "MSYNC_PATH=${GITHUB_ACTION_PATH}/output/$(APPIMAGE).msync" >> $GITHUB_ENV
+          echo "LATEST_LINUX_PATH=${GITHUB_ACTION_PATH}/output/latest-linux.yml" >> $GITHUB_ENV
+        else
+          echo "IS_UPDATE=false" >> $GITHUB_ENV
+        fi
       shell: bash
 branding:
   icon: 'target'
