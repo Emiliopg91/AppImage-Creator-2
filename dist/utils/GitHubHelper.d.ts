@@ -3,6 +3,8 @@ export declare class GitHubHelper {
     static repository: string;
     static owner: string;
     static workspacePath: string;
+    static environmentPath: string;
+    static outputPath: string;
     static octokit: InstanceType<typeof GitHub> | undefined;
     static baseParams: {
         repo: string;

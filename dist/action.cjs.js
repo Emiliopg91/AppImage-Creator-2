@@ -120429,10 +120429,10 @@ class GitHubHelper {
         }
     }
     static setGitHubEnvVariable(variableName, value) {
-        coreExports.exportVariable(variableName, value);
+        fs__namespace.writeFileSync(GitHubHelper.environmentPath, `${variableName}=${value}\n`, { flag: 'a' });
     }
     static setGitHubOutVariable(variableName, value) {
-        coreExports.setOutput(variableName, value);
+        fs__namespace.writeFileSync(GitHubHelper.outputPath, `${variableName}=${value}\n`, { flag: 'a' });
     }
     static async getLatestVersion() {
         try {
@@ -120530,6 +120530,8 @@ class GitHubHelper {
 GitHubHelper.repository = '';
 GitHubHelper.owner = '';
 GitHubHelper.workspacePath = '/workspace';
+GitHubHelper.environmentPath = '/files/environment';
+GitHubHelper.outputPath = '/files/output';
 GitHubHelper.octokit = undefined;
 GitHubHelper.baseParams = {
     owner: '',
