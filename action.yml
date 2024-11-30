@@ -5,11 +5,6 @@ inputs:
     description: 'GITHUB_TOKEN or a `repo` scoped Personal Access Token (PAT)'
   electron:
     description: 'Flag to use electron app workflow'
-outputs:
-  version:
-    description: 'Application version'
-  is_update:
-    description: 'If version differs from latest release version'
 runs:
   using: 'composite'
   steps:
@@ -34,9 +29,16 @@ runs:
         APPIMAGE=$(ls *.AppImage 2>/dev/null)
         if [ $? -eq 0 ]; then
           echo "IS_UPDATE=true" >> $GITHUB_ENV
-          echo "APPIMAGE_PATH=${GITHUB_ACTION_PATH}/output/$(APPIMAGE)" >> $GITHUB_ENV
-          echo "MSYNC_PATH=${GITHUB_ACTION_PATH}/output/$(APPIMAGE).msync" >> $GITHUB_ENV
+          echo "APPIMAGE_PATH=${GITHUB_ACTION_PATH}/output/$APPIMAGE" >> $GITHUB_ENV
+          echo "MSYNC_PATH=${GITHUB_ACTION_PATH}/output/$APPIMAGE.msync" >> $GITHUB_ENV
           echo "LATEST_LINUX_PATH=${GITHUB_ACTION_PATH}/output/latest-linux.yml" >> $GITHUB_ENV
+          echo $GITHUB_WORKSPACE
+          if [ "${{ inputs.electron }}" == "true" ]; then
+            echo "APP_VERSION=$(jq -r .version < package.json)" >> $GITHUB_ENV
+          else
+            version_cmd=$(grep "^Version-Cmd=" app.desktop | sed 's/^Version-Cmd=//')
+            echo "APP_VERSION=$(eval $version_cmd)" >> $GITHUB_ENV
+          fi
         else
           echo "IS_UPDATE=false" >> $GITHUB_ENV
         fi
