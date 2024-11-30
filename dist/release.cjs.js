@@ -118391,10 +118391,16 @@ class GitHubHelper {
         }
     }
     static setGitHubEnvVariable(variableName, value) {
-        fs__namespace.writeFileSync(GitHubHelper.environmentPath, `${variableName}=${value}\n`, { flag: 'a' });
+        let content = fs__namespace.readFileSync(GitHubHelper.environmentPath).toString();
+        content = content + `${variableName}=${value}\n`;
+        fs__namespace.writeFileSync(GitHubHelper.environmentPath, content);
+        coreExports.info(`New environment content: ${content}`);
     }
     static setGitHubOutVariable(variableName, value) {
-        fs__namespace.writeFileSync(GitHubHelper.outputPath, `${variableName}=${value}\n`, { flag: 'a' });
+        let content = fs__namespace.readFileSync(GitHubHelper.outputPath).toString();
+        content = content + `${variableName}=${value}\n`;
+        fs__namespace.writeFileSync(GitHubHelper.outputPath, content);
+        coreExports.info(`New output content: ${content}`);
     }
     static async getLatestVersion() {
         try {
