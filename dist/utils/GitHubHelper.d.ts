@@ -3,8 +3,6 @@ export declare class GitHubHelper {
     static repository: string;
     static owner: string;
     static workspacePath: string;
-    static environmentPath: string;
-    static outputPath: string;
     static octokit: InstanceType<typeof GitHub> | undefined;
     static baseParams: {
         repo: string;
@@ -13,8 +11,6 @@ export declare class GitHubHelper {
     static latestUrl: string;
     static git: import("simple-git").SimpleGit;
     static initialize(): Promise<void>;
-    static setGitHubEnvVariable(variableName: string, value: string): void;
-    static setGitHubOutVariable(variableName: string, value: string): void;
     static getLatestVersion(): Promise<string | undefined>;
     static checkUpdateRequired(newVersion: string): Promise<boolean>;
     static deleteRelease(tag: string): Promise<void>;
