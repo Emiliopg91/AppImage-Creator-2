@@ -120428,18 +120428,6 @@ class GitHubHelper {
             coreExports.endGroup();
         }
     }
-    static setGitHubEnvVariable(variableName, value) {
-        let content = fs__namespace.readFileSync(GitHubHelper.environmentPath).toString();
-        content = content + `${variableName}=${value}\n`;
-        fs__namespace.writeFileSync(GitHubHelper.environmentPath, content);
-        coreExports.info(`New environment content: ${content}`);
-    }
-    static setGitHubOutVariable(variableName, value) {
-        let content = fs__namespace.readFileSync(GitHubHelper.outputPath).toString();
-        content = content + `${variableName}=${value}\n`;
-        fs__namespace.writeFileSync(GitHubHelper.outputPath, content);
-        coreExports.info(`New output content: ${content}`);
-    }
     static async getLatestVersion() {
         try {
             const response = await GitHubHelper.octokit.rest.repos.getLatestRelease(Object.assign({}, GitHubHelper.baseParams));
@@ -120463,8 +120451,6 @@ class GitHubHelper {
         else {
             coreExports.info('AppImage is up-to-date');
         }
-        GitHubHelper.setGitHubEnvVariable('IS_UPDATE', update.toString().toLowerCase());
-        GitHubHelper.setGitHubOutVariable('is_update', update.toString().toLowerCase());
         return update;
     }
     static async deleteRelease(tag) {
@@ -120536,8 +120522,6 @@ class GitHubHelper {
 GitHubHelper.repository = '';
 GitHubHelper.owner = '';
 GitHubHelper.workspacePath = '/workspace';
-GitHubHelper.environmentPath = '/files/environment';
-GitHubHelper.outputPath = '/files/output';
 GitHubHelper.octokit = undefined;
 GitHubHelper.baseParams = {
     owner: '',
@@ -138611,9 +138595,7 @@ class AppImageTool {
             process.chdir(directory);
             const fileName = name.replace(/[^a-zA-Z0-9]/g, '-');
             const appImagePath = path__namespace.join(this.outDir, `${fileName}.AppImage`);
-            const actualAppImagePath = path__namespace.join(this.actualOutDir, `${fileName}.AppImage`);
             const latestLinuxPath = path__namespace.join(this.outDir, 'latest-linux.yml');
-            const actualLatestLinuxPath = path__namespace.join(this.actualOutDir, 'latest-linux.yml');
             coreExports.info(`Generating AppImage file '${fileName}'`);
             const command = `ARCH=x86_64 ${this.appimagetoolPath} --comp gzip ${directory} "${appImagePath}" -u "gh-releases-zsync|${GitHubHelper.owner}|${GitHubHelper.repository}|latest|${fileName}.AppImage.zsync"`;
             coreExports.info(`Running '${command}'`);
@@ -138636,8 +138618,6 @@ class AppImageTool {
             fs__namespace.copyFileSync(path__namespace.join(directory, `${path__namespace.basename(appImagePath)}.zsync`), `${appImagePath}.zsync`);
             coreExports.info(`Generating MSync file '${appImagePath}.msync'`);
             MSync.fromBinary(appImagePath).toFile(`${appImagePath}.msync`);
-            GitHubHelper.setGitHubEnvVariable('APPIMAGE_PATH', actualAppImagePath);
-            GitHubHelper.setGitHubEnvVariable('MSYNC_PATH', `${actualAppImagePath}.msync`);
             coreExports.info('Generating latest-linux.yml');
             const sha512 = this.getSha512(appImagePath);
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -138654,7 +138634,6 @@ class AppImageTool {
                 releaseDate: this.getReleaseDate(appImagePath)
             };
             fs__namespace.writeFileSync(latestLinuxPath, dump(data, { noRefs: true }));
-            GitHubHelper.setGitHubEnvVariable('LATEST_LINUX_PATH', actualLatestLinuxPath);
             process.chdir(prevCwd);
         }
         finally {
@@ -138698,10 +138677,6 @@ class AppImageTool {
         const fileBuffer = fs__namespace.readFileSync(path);
         hash.update(fileBuffer);
         return hash.digest('base64');
-    }
-    cleanup() {
-        coreExports.info('Cleaning workspace and temporary files');
-        fs__namespace.rmSync(this.tmpPath, { recursive: true, force: true });
     }
 }
 
@@ -138777,18 +138752,12 @@ class InputParameters {
 class BinaryAppImageProcessor {
     static async processAppImage() {
         const appImageTool = new AppImageTool();
-        try {
-            const githubWorkspace = GitHubHelper.workspacePath;
-            process.chdir(githubWorkspace);
-            const parametros = InputParameters.fromDesktopFile();
-            await GitHubHelper.checkUpdateRequired(parametros.version);
-            GitHubHelper.setGitHubEnvVariable('APP_VERSION', parametros.version);
-            GitHubHelper.setGitHubOutVariable('version', parametros.version);
+        const githubWorkspace = GitHubHelper.workspacePath;
+        process.chdir(githubWorkspace);
+        const parametros = InputParameters.fromDesktopFile();
+        if (await GitHubHelper.checkUpdateRequired(parametros.version)) {
             appImageTool.createResources(parametros.name, parametros.version, parametros.icon, parametros.entrypoint, parametros.desktop);
             await appImageTool.createAppImage(parametros.name, parametros.version);
-        }
-        finally {
-            appImageTool.cleanup();
         }
     }
 }
@@ -138874,27 +138843,18 @@ class ElectronAppImageProcessor {
     static async processAppImage() {
         const appImageTool = new AppImageTool();
         let appImage = null;
-        try {
-            process.chdir(path__namespace.join(GitHubHelper.workspacePath, 'dist'));
-            appImage = ElectronAppImageProcessor.findAppImage();
-            const appName = path__namespace.basename(appImage).replace('.AppImage', '');
-            if (appImage === null) {
-                throw new Error('AppImage file not found');
-            }
-            ElectronAppImageProcessor.removeUnneededDistEntries();
-            await appImageTool.extractAppImage(appImage);
-            ElectronAppImageProcessor.modifySquashFSRoot(appImageTool, appName, GitHubHelper.latestUrl);
-            const desktop = new DesktopParser(path__namespace.join(appName, `${appName.toLowerCase()}.desktop`));
-            const version = desktop.data['Desktop Entry']['X-AppImage-Version'];
-            await appImageTool.createAppImage(appName, version, path__namespace.resolve(appName));
+        process.chdir(path__namespace.join(GitHubHelper.workspacePath, 'dist'));
+        appImage = ElectronAppImageProcessor.findAppImage();
+        const appName = path__namespace.basename(appImage).replace('.AppImage', '');
+        if (appImage === null) {
+            throw new Error('AppImage file not found');
         }
-        catch (e) {
-            console.error(e);
-            throw e;
-        }
-        finally {
-            appImageTool.cleanup();
-        }
+        ElectronAppImageProcessor.removeUnneededDistEntries();
+        await appImageTool.extractAppImage(appImage);
+        ElectronAppImageProcessor.modifySquashFSRoot(appImageTool, appName, GitHubHelper.latestUrl);
+        const desktop = new DesktopParser(path__namespace.join(appName, `${appName.toLowerCase()}.desktop`));
+        const version = desktop.data['Desktop Entry']['X-AppImage-Version'];
+        await appImageTool.createAppImage(appName, version, path__namespace.resolve(appName));
     }
 }
 
