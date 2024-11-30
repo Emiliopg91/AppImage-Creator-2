@@ -1,7 +1,7 @@
 FROM docker.io/library/ubuntu:22.04
 
 VOLUME ["/workspace", "/output", '/files/output', '/files/environment']                                                                                                                                
-                  
+
 ENV NVM_DIR="/node"         
 
 RUN apt-get update \
@@ -15,8 +15,10 @@ RUN apt-get update \
     && . $NVM_DIR/nvm.sh \
     && nvm install 23 \
     && nvm use 23 \
-    && mkdir -p /workspace /output \
-    && chmod 777 /workspace /output \
+    && mkdir -p /workspace /output /files \
+    && touch /files/output \
+    && touch /files/environment \
+    && chmod -R 777 /workspace /output /files \ 
     && git config --global --add safe.directory /workspace
 
 WORKDIR /workspace
