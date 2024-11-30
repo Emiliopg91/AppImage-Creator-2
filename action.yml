@@ -13,11 +13,11 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: Using workspace ${GITHUB_WORKSPACE}
+    - run: echo "Using workspace ${GITHUB_WORKSPACE}"
       shell: bash
-    - run: Using env file ${GITHUB_ENV}
+    - run: echo "Using env file ${GITHUB_ENV}"
       shell: bash
-    - run: Using output file ${GITHUB_OUT}
+    - run: echo "Using output file ${GITHUB_OUT}"
       shell: bash
     - run: mkdir ${GITHUB_WORKSPACE}/output
       shell: bash
