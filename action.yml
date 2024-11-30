@@ -13,15 +13,13 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: mkdir ${GITHUB_WORKSPACE}/output
-      shell: bash
-    - run: mkdir ${GITHUB_WORKSPACE}/output
-      shell: bash
     - run: Using workspace ${GITHUB_WORKSPACE}
       shell: bash
     - run: Using env file ${GITHUB_ENV}
       shell: bash
     - run: Using output file ${GITHUB_OUT}
+      shell: bash
+    - run: mkdir ${GITHUB_WORKSPACE}/output
       shell: bash
     - run: |
         docker run --rm --user root --device /dev/fuse --privileged \
