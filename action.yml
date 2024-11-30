@@ -15,6 +15,14 @@ runs:
   steps:
     - run: mkdir ${GITHUB_WORKSPACE}/output
       shell: bash
+    - run: mkdir ${GITHUB_WORKSPACE}/output
+      shell: bash
+    - run: Using workspace ${GITHUB_WORKSPACE}
+      shell: bash
+    - run: Using env file ${GITHUB_ENV}
+      shell: bash
+    - run: Using output file ${GITHUB_OUT}
+      shell: bash
     - run: |
         docker run --rm --user root --device /dev/fuse --privileged \
           -e IS_ELECTRON="${{ inputs.electron }}" -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" -e GITHUB_TOKEN="${{ inputs.token }}" -e OUTPUT_PATH=${GITHUB_ACTION_PATH}/output \
