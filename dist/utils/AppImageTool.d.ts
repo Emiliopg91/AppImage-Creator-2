@@ -15,5 +15,4 @@ export declare class AppImageTool {
     extractAppImage(file: string): Promise<void>;
     getReleaseDate(path: string): string;
     getSha512(path: string): string;
-    cleanup(): void;
 }
