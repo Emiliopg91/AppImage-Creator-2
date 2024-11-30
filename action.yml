@@ -32,7 +32,7 @@ runs:
           echo "APPIMAGE_PATH=${GITHUB_ACTION_PATH}/output/$APPIMAGE" >> $GITHUB_ENV
           echo "MSYNC_PATH=${GITHUB_ACTION_PATH}/output/$APPIMAGE.msync" >> $GITHUB_ENV
           echo "LATEST_LINUX_PATH=${GITHUB_ACTION_PATH}/output/latest-linux.yml" >> $GITHUB_ENV
-          echo $GITHUB_WORKSPACE
+          cd $GITHUB_WORKSPACE
           if [ "${{ inputs.electron }}" == "true" ]; then
             echo "APP_VERSION=$(jq -r .version < package.json)" >> $GITHUB_ENV
           else
