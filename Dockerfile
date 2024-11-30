@@ -1,6 +1,6 @@
 FROM docker.io/library/ubuntu:22.04
 
-VOLUME ["/workspace", "/output"]                                                                                                                                
+VOLUME ["/workspace", "/output", '/files/output', '/files/environment']                                                                                                                                
                   
 ENV NVM_DIR="/node"         
 

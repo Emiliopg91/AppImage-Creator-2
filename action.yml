@@ -18,7 +18,8 @@ runs:
     - run: |
         docker run --rm --user root --device /dev/fuse --privileged \
           -e IS_ELECTRON="${{ inputs.electron }}" -e GITHUB_REPOSITORY="${GITHUB_REPOSITORY}" -e GITHUB_TOKEN="${{ inputs.token }}" -e OUTPUT_PATH=${GITHUB_ACTION_PATH}/output \
-          -v ${GITHUB_WORKSPACE}:/workspace -v ${GITHUB_ACTION_PATH}/output:/output ghcr.io/emiliopg91/appimage-creator-2:latest
+          -v ${GITHUB_WORKSPACE}:/workspace -v ${GITHUB_ACTION_PATH}/output:/output -v ${GITHUB_ENV}:/files/output -v ${GITHUB_OUTPUT}:/files/environment \
+          ghcr.io/emiliopg91/appimage-creator-2:latest
       shell: bash
 branding:
   icon: 'target'

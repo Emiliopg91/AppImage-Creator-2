@@ -1,12 +1,15 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
 import { GitHub } from '@actions/github/lib/utils';
+import * as fs from 'fs';
 import { simpleGit } from 'simple-git';
 
 export class GitHubHelper {
   public static repository = '';
   public static owner = '';
   public static workspacePath = '/workspace';
+  public static environmentPath = '/files/environment';
+  public static outputPath = '/files/output';
   public static octokit: InstanceType<typeof GitHub> | undefined = undefined;
   public static baseParams: { repo: string; owner: string } = {
     owner: '',
@@ -50,11 +53,11 @@ export class GitHubHelper {
   }
 
   public static setGitHubEnvVariable(variableName: string, value: string): void {
-    core.exportVariable(variableName, value);
+    fs.writeFileSync(GitHubHelper.environmentPath, `${variableName}=${value}\n`, { flag: 'a' });
   }
 
   public static setGitHubOutVariable(variableName: string, value: string): void {
-    core.setOutput(variableName, value);
+    fs.writeFileSync(GitHubHelper.outputPath, `${variableName}=${value}\n`, { flag: 'a' });
   }
 
   static async getLatestVersion(): Promise<string | undefined> {
