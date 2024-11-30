@@ -53,11 +53,17 @@ export class GitHubHelper {
   }
 
   public static setGitHubEnvVariable(variableName: string, value: string): void {
-    fs.writeFileSync(GitHubHelper.environmentPath, `${variableName}=${value}\n`, { flag: 'a' });
+    let content = fs.readFileSync(GitHubHelper.environmentPath).toString();
+    content = content + `${variableName}=${value}\n`;
+    fs.writeFileSync(GitHubHelper.environmentPath, content);
+    core.info(`New environment content: ${content}`);
   }
 
   public static setGitHubOutVariable(variableName: string, value: string): void {
-    fs.writeFileSync(GitHubHelper.outputPath, `${variableName}=${value}\n`, { flag: 'a' });
+    let content = fs.readFileSync(GitHubHelper.outputPath).toString();
+    content = content + `${variableName}=${value}\n`;
+    fs.writeFileSync(GitHubHelper.outputPath, content);
+    core.info(`New output content: ${content}`);
   }
 
   static async getLatestVersion(): Promise<string | undefined> {
