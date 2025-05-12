@@ -13,8 +13,8 @@ RUN apt-get update \
     && mkdir $NVM_DIR \
     && curl https://raw.githubusercontent.com/creationix/nvm/v0.40.1/install.sh | bash \
     && . $NVM_DIR/nvm.sh \
-    && nvm install 23 \
-    && nvm use 23 \
+    && nvm install v23.3.0 \
+    && nvm use v23.3.0 \
     && mkdir -p /workspace /output /files \
     && touch /files/output \
     && touch /files/environment \
