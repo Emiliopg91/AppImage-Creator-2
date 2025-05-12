@@ -12,7 +12,7 @@ if command -v node &> /dev/null; then
   dskLine=$(cat ${HERE}/*.desktop | grep Name)
   IFS="=" read -r prop name <<< "$dskLine"
 
-  node ${HERE}/usr/bin/autoupdate/autoupdate.cjs.js $vers $url $name $APPIMAGE 
+  node ${HERE}/usr/bin/autoupdate/autoupdate.cjs.js $vers $url "$name" $APPIMAGE 
 
   if [ $? -eq 0 ]; then
     exit
