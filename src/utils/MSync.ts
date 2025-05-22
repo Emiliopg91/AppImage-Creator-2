@@ -33,7 +33,7 @@ export class MSync {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
   }
 
-  async patch(filePath: string, binaryUrl?: string, overwrite = true): Promise<void> {
+  async patch(filePath: string, binaryUrl?: string, overwrite = false): Promise<void> {
     const t0 = Date.now();
     const session: AxiosInstance = axios.create();
     const tmpPath = path.join(os.tmpdir(), `msync-${crypto.randomBytes(8).toString('hex')}`);
@@ -96,6 +96,9 @@ export class MSync {
         if (overwrite) {
           fs.copyFileSync(tmpPath, filePath);
           core.info(`Archivo actualizado: ${filePath}`);
+        } else {
+          fs.copyFileSync(tmpPath, filePath+".upd");
+          core.info(`Actualizacion descargada: ${filePath}`);  
         }
 
         const elapsedTime = (Date.now() - t0) / 1000;

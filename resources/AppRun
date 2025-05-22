@@ -15,6 +15,7 @@ if command -v node &> /dev/null; then
   node ${HERE}/usr/bin/autoupdate/autoupdate.cjs.js $vers $url "$name" $APPIMAGE 
 
   if [ $? -eq 0 ]; then
+    nohup bash -c 'sleep 1; mv $APPIMAGE.upd $APPIMAGE; chmod +x $APPIMAGE; $APPIMAGE &' > /dev/null 2>&1
     exit
   fi
 else
