@@ -138370,7 +138370,7 @@ class MSync {
         };
         fs__namespace.writeFileSync(filePath, JSON.stringify(data, null, 2));
     }
-    async patch(filePath, binaryUrl, overwrite = true) {
+    async patch(filePath, binaryUrl, overwrite = false) {
         var _b;
         const t0 = Date.now();
         const session = axios.create();
@@ -138422,6 +138422,10 @@ class MSync {
                 if (overwrite) {
                     fs__namespace.copyFileSync(tmpPath, filePath);
                     coreExports.info(`Archivo actualizado: ${filePath}`);
+                }
+                else {
+                    fs__namespace.copyFileSync(tmpPath, filePath + ".upd");
+                    coreExports.info(`Actualizacion descargada: ${filePath}`);
                 }
                 const elapsedTime = (Date.now() - t0) / 1000;
                 const speed = totalSize / elapsedTime;
